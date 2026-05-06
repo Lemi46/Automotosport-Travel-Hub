@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<!-- Autor: Milan Lemić-->
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil Kupca | Automotosport Travel Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --hub-blue: #003580; --hub-red: #E10600; --hub-light: #f5f7fa; }
+        body { background-color: var(--hub-light); font-family: 'Segoe UI', sans-serif; }
+        .navbar { background-color: var(--hub-blue); border-bottom: 4px solid var(--hub-red); }
+        .navbar-brand { font-weight: bold; color: white !important; text-transform: uppercase; }
+        .role-indicator { background-color: white; color: var(--hub-blue); padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; border: 2px solid var(--hub-red); }
+        footer { background-color: #333; color: white; padding: 20px 0; margin-top: 50px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <img src="logo.jpeg" alt="Logo" height="40" class="me-2">
+                <span>Automotosport Travel Hub</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center">
+                <a href="index.html" class="text-white me-3 text-decoration-none">Odjavi se</a>
+                <div class="role-indicator">STATUS: KUPAC</div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-5" style="min-height: 60vh;">
+        <h2 class="fw-bold mb-4" style="color: var(--hub-blue);">Moj Profil: Istorija kupovina</h2>
+        
+        <div class="card shadow-sm">
+            <div class="card-body p-0">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID Rezervacije</th>
+                            <th>Događaj</th>
+                            <th>Datum</th>
+                            <th>Status</th>
+                            <th class="text-end">Akcija</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#RES-9982</td>
+                            <td><strong>GP Monza 2026</strong> (VIP + Monza Palace)</td>
+                            <td>04. Sep 2026.</td>
+                            <td><span class="badge bg-success">Potvrđeno</span></td>
+                            <td class="text-end"><button class="btn btn-sm btn-outline-danger">📄 Preuzmi PDF Vaučer</button></td>
+                        </tr>
+                        <tr>
+                            <td>#RES-4412</td>
+                            <td><strong>MotoGP Catalunya</strong> (Gold + B&B Park)</td>
+                            <td>22. Maj 2026.</td>
+                            <td><span class="badge bg-secondary">Završeno</span></td>
+                            <td class="text-end"><button class="btn btn-sm btn-outline-danger">📄 Preuzmi PDF Vaučer</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center">
+        <div class="container">
+            <p class="mb-0">Automotosport Travel Hub &copy; 2026 - ETF Beograd</p>
+        </div>
+    </footer>
+</body>
+</html>

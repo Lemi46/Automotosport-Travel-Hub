@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<!-- Autor: Milan Lemić-->
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prijava i Registracija | Automotosport Travel Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --hub-blue: #003580;
+            --hub-red: #E10600;
+            --hub-light: #f5f7fa;
+        }
+        body { background-color: var(--hub-light); font-family: 'Segoe UI', sans-serif; }
+        .navbar { background-color: var(--hub-blue); border-bottom: 4px solid var(--hub-red); }
+        .navbar-brand { font-weight: bold; color: white !important; text-transform: uppercase; }
+        .role-indicator {
+            background-color: white; color: var(--hub-blue); padding: 5px 12px;
+            border-radius: 20px; font-weight: bold; font-size: 0.8rem; border: 2px solid var(--hub-red);
+        }
+        .btn-reserve { background-color: var(--hub-red); color: white; font-weight: bold; border: none; }
+        .btn-reserve:hover { background-color: #b30500; color: white; }
+        footer { background-color: #333; color: white; padding: 20px 0; margin-top: 50px; }
+        .card { border: none; border-radius: 15px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <img src="logo.jpeg" alt="Logo" height="40" class="me-2">
+                <span>Automotosport Travel Hub</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center">
+                <ul class="navbar-nav me-3 d-none d-lg-flex">
+                    <li class="nav-item"><a class="nav-link text-white" href="index.html">Početna</a></li>
+                    <li class="nav-item"><a class="nav-link text-white fw-bold" href="auth.html">Nalog</a></li>
+                </ul>
+                <div class="role-indicator">STATUS: GOST</div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-5">
+        <div class="row justify-content-center">
+            
+            <div class="col-md-5 mb-4">
+                <div class="card shadow-sm h-100 p-4">
+                    <h3 class="fw-bold mb-3" style="color: var(--hub-blue);">Prijava</h3>
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">E-mail adresa</label>
+                            <input type="email" class="form-control" placeholder="unesite@email.com">
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">Lozinka</label>
+                            <input type="password" class="form-control" placeholder="••••••••">
+                        </div>
+                        <div class="d-grid gap-2">
+                            <a href="index.html" class="btn btn-reserve">Uloguj se kao Kupac</a>
+                            <a href="admin_panel.html" class="btn btn-outline-secondary btn-sm">Panel za Administratore</a>
+                            <a href="partner_panel.html" class="btn btn-outline-secondary btn-sm">Panel za Partnere</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-md-5 mb-4">
+                <div class="card shadow-sm h-100 p-4" style="border-top: 5px solid var(--hub-red);">
+                    <h3 class="fw-bold mb-3" style="color: var(--hub-blue);">Registracija</h3>
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-danger">Registrujem se kao:</label>
+                            <select class="form-select border-danger">
+                                <option>Kupac (Želim da putujem)</option>
+                                <option>Organizator (Dodajem trke)</option>
+                                <option>Hotelijer (Izdajem smeštaj)</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-6 mb-3"><input type="text" class="form-control" placeholder="Ime"></div>
+                            <div class="col-6 mb-3"><input type="text" class="form-control" placeholder="Prezime"></div>
+                        </div>
+                        <div class="mb-3"><input type="email" class="form-control" placeholder="E-mail"></div>
+                        <div class="mb-4"><input type="password" class="form-control" placeholder="Lozinka (min. 8 karaktera)"></div>
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-reserve">Kreiraj nalog</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="text-center">
+        <div class="container">
+            <p class="mb-0">Automotosport Travel Hub &copy; 2026 - ETF Beograd</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

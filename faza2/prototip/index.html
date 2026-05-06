@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<!-- Autor: Milan Lemić-->
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Automotosport Travel Hub | Početna</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --hub-blue: #003580;
+            --hub-red: #E10600;
+            --hub-light: #f5f7fa;
+        }
+        body { background-color: var(--hub-light); font-family: 'Segoe UI', sans-serif; }
+        .navbar { background-color: var(--hub-blue); border-bottom: 4px solid var(--hub-red); }
+        .navbar-brand { font-weight: bold; color: white !important; text-transform: uppercase; }
+        .role-indicator {
+            background-color: white; color: var(--hub-blue); padding: 5px 12px;
+            border-radius: 20px; font-weight: bold; font-size: 0.8rem; border: 2px solid var(--hub-red);
+        }
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1533130061792-64b345e4a833?auto=format&fit=crop&q=80&w=1200') center/cover;
+            color: white; padding: 100px 0; border-radius: 0 0 20px 20px;
+        }
+        .btn-reserve { background-color: var(--hub-red); color: white; font-weight: bold; border: none; }
+        .btn-reserve:hover { background-color: #b30500; color: white; }
+        footer { background-color: #333; color: white; padding: 30px 0; margin-top: 50px; }
+    </style>
+</head>
+<body>
+    
+    <nav class="navbar navbar-expand-lg sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="index.html">
+                <img src="logo.jpeg" alt="Logo" height="40" class="me-2">
+                <span>Automotosport Travel Hub</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center">
+                <ul class="navbar-nav me-3 d-none d-lg-flex">
+                    <li class="nav-item"><a class="nav-link text-white fw-bold" href="index.html">Početna</a></li>
+                    <li class="nav-item"><a class="nav-link text-white" href="auth.html">Nalog</a></li>
+                </ul>
+                <div class="role-indicator">STATUS: GOST</div>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero text-center mb-5">
+        <div class="container">
+            <h1 class="display-4 fw-bold text-uppercase">Tvoja trka. Tvoj hotel. Tvoja avantura.</h1>
+            <p class="lead">Rezerviši karte za globalne šampionate uz najpovoljniji smeštaj.</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="card shadow-sm mb-5" style="margin-top: -80px; border-top: 5px solid var(--hub-red);">
+            <div class="card-body p-4">
+                <form class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Izaberi šampionat</label>
+                        <select class="form-select">
+                            <option selected>Svi šampionati</option>
+                            <option>Formula 1</option>
+                            <option>MotoGP</option>
+                            <option>WSBK</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Lokacija</label>
+                        <input type="text" class="form-control" placeholder="npr. Monza, Italija">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label fw-bold">Mesec</label>
+                        <input type="month" class="form-control">
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-reserve w-100 py-2">PRETRAŽI</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <h3 class="mb-4 fw-bold" style="color: var(--hub-blue);">🔥 Aktuelni događaji</h3>
+        <div class="row">
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <img src="https://images.unsplash.com/photo-1541447237128-f4bcb2918f33?auto=format&fit=crop&q=80&w=400" class="card-img-top" alt="Monza">
+                    <div class="card-body">
+                        <span class="badge bg-danger mb-2">FORMULA 1</span>
+                        <h5 class="card-title fw-bold">Grand Prix Monza</h5>
+                        <p class="card-text text-muted">Italija | 04 - 06 Septembar</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h5 mb-0 fw-bold">od 249 €</span>
+                            <a href="detalji_trke.html" class="btn btn-outline-primary btn-sm">Pogledaj paket</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <img src="https://images.unsplash.com/photo-1614242250917-06109968a356?auto=format&fit=crop&q=80&w=400" class="card-img-top" alt="Catalunya">
+                    <div class="card-body">
+                        <span class="badge bg-primary mb-2">MOTOGP</span>
+                        <h5 class="card-title fw-bold">GP Catalunya</h5>
+                        <p class="card-text text-muted">Španija | 22 - 24 Maj</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h5 mb-0 fw-bold">od 180 €</span>
+                            <a href="detalji_trke.html" class="btn btn-outline-primary btn-sm">Pogledaj paket</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center">
+        <div class="container">
+            <p class="mb-0">Automotosport Travel Hub &copy; 2026 - ETF Beograd</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
