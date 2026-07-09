@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sektori - {{ trka.naziv_trke }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Sektori i karte za trku: <span class="text-primary">{{ trka.naziv_trke }}</span></h2>
+        <a href="{% url 'organizator_dashboard' %}" class="btn btn-secondary">Nazad na Dashboard</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Dodaj novi sektor</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Naziv sektora (Tribina)</label>
+                            <input type="text" name="naziv_sektora" class="form-control" required placeholder="npr. Tribina A">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Kapacitet (Ukupno mesta)</label>
+                            <input type="number" name="kapacitet" class="form-control" required min="1">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Cena karte (€)</label>
+                            <input type="number" name="cena" class="form-control" required step="0.01" min="1">
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">Sačuvaj sektor</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Pregled sektora</h5>
+                </div>
+                <div class="card-body">
+                    {% if sektori %}
+                        <table class="table table-striped table-hover mt-3">
+                            <thead>
+                                <tr>
+                                    <th>Naziv sektora</th>
+                                    <th>Kapacitet</th>
+                                    <th>Slobodnih mesta</th>
+                                    <th>Cena karte</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                                {% for sektor in sektori %}
+                                                <tr>
+                                                    <td>{{ sektor.naziv_sektora }}</td>
+                                                    <td>{{ sektor.ukupni_kapacitet }}</td>
+                                                    <td class="text-success fw-bold">{{ sektor.slobodna_mesta }}</td>
+                                                    <td>{{ sektor.cena_karte }} €</td>
+                                                </tr>
+                                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="alert alert-warning mt-3">
+                            Još uvek nema dodatih sektora za ovu trku.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
