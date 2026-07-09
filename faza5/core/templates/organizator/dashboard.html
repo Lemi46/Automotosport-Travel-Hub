@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="sr">
 <head>
@@ -6,104 +7,136 @@
     <title>Organizator Dashboard | Automotosport Travel Hub</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        :root { --hub-blue: #003580; --hub-red: #E10600; --hub-light: #f5f7fa; }
+        :root {
+            --hub-blue: #003580;
+            --hub-red: #E10600;
+            --hub-light: #f5f7fa;
+        }
         body { background-color: var(--hub-light); font-family: 'Segoe UI', sans-serif; }
+
+        /* Navigacija prema prototipu */
         .navbar { background-color: var(--hub-blue); border-bottom: 4px solid var(--hub-red); }
         .navbar-brand { font-weight: bold; color: white !important; text-transform: uppercase; }
-        .role-indicator { background-color: white; color: var(--hub-blue); padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; border: 2px solid var(--hub-red); }
-        .btn-action { background-color: var(--hub-blue); color: white; }
+        .role-indicator {
+            background-color: white; color: var(--hub-blue); padding: 5px 12px;
+            border-radius: 20px; font-weight: bold; font-size: 0.8rem; border: 2px solid var(--hub-red);
+        }
+
+        /* Dugmići */
+        .btn-action { background-color: var(--hub-blue); color: white; border: none; }
+        .btn-action:hover { background-color: #002255; color: white; }
+        .btn-reserve { background-color: var(--hub-red); color: white; font-weight: bold; border: none; }
+        .btn-reserve:hover { background-color: #b30000; color: white; }
+
+        /* Futer */
         footer { background-color: #333; color: white; padding: 20px 0; margin-top: 50px; }
     </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
-            <a class="navbar-brand" href="#">🏁 Automotosport Hub</a>
-            <span class="role-indicator ms-auto">ORGANIZATOR TRKA</span>
+            <a class="navbar-brand d-flex align-items-center" href="#">
+    <img src="{% static 'logo.jpeg' %}" alt="Logo" height="40" class="me-2">
+    <span>Automotosport Travel Hub</span>
+</a>
+            <div class="d-flex align-items-center ms-auto">
+                <span class="role-indicator me-3">Uloga: Organizator</span>
+            </div>
         </div>
     </nav>
 
-    <main class="container">
-        <h2 class="mb-4">Upravljanje takmičenjima i trkama</h2>
+    <main class="container mt-5">
+        <div class="row mb-4">
+            <div class="col">
+                <h2 class="fw-bold" style="color: var(--hub-blue);">Kontrolna tabla organizatora</h2>
+                <p class="text-muted">Upravljanje motosport događajima i sektorima staza.</p>
+            </div>
+        </div>
 
         <div class="row">
             <div class="col-md-4 mb-4">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-dark text-white fw-bold">
-                        ➕ Dodaj Novu Trku
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header text-white" style="background-color: var(--hub-blue);">
+                        <h5 class="mb-0">Dodaj novu trku</h5>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body bg-white">
                         <form method="POST" action="{% url 'dodaj_trku' %}">
                             {% csrf_token %}
 
                             <div class="mb-3">
-                                <label class="form-label">Naziv trke (npr. GP Monza)</label>
-                                <input type="text" name="naziv_trke" class="form-control" required>
+                                <label for="naziv_trke" class="form-label fw-bold">Naziv trke</label>
+                                <input type="text" name="naziv_trke" id="naziv_trke" class="form-control border-secondary" required placeholder="npr. GP Monza">
+                                <div id="naziv-error-poruka" class="mt-1"></div>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Šampionat</label>
-                                <select name="sampionat" class="form-select" required>
-                                    <option value="F1">Formula 1</option>
-                                    <option value="MotoGP">MotoGP</option>
-                                </select>
+                                <label class="form-label fw-bold">Šampionat</label>
+                                <input type="text" name="sampionat" class="form-control border-secondary" required placeholder="npr. F1, MotoGP">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Staza</label>
-                                <input type="text" name="staza" class="form-control" required>
+                                <label class="form-label fw-bold">Staza</label>
+                                <input type="text" name="staza" class="form-control border-secondary" required placeholder="npr. Autodromo Nazionale Monza">
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">Država</label>
-                                <input type="text" name="drzava" class="form-control" required>
+                                <label class="form-label fw-bold">Država</label>
+                                <input type="text" name="drzava" class="form-control border-secondary" required placeholder="npr. Italija">
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Datum održavanja</label>
-                                <input type="date" name="datum_odrzavanja" class="form-control" required>
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Datum održavanja</label>
+                                <input type="date" name="datum" class="form-control border-secondary" required>
                             </div>
 
-                            <button type="submit" class="btn btn-action w-100 fw-bold">Sačuvaj u bazu</button>
+                            <div class="d-grid">
+                                <button type="submit" id="submit-btn" class="btn btn-reserve btn-lg">POTVRDI UNOS</button>
+                            </div>
                         </form>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-8">
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white fw-bold border-bottom">
-                        📋 Moje aktivne trke
+            <div class="col-md-8 mb-4">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header text-white" style="background-color: var(--hub-blue);">
+                        <h5 class="mb-0">Moje aktivne trke</h5>
                     </div>
-                    <div class="card-body p-0">
-                        <table class="table table-hover mb-0">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Trka</th>
-                                    <th>Šampionat</th>
-                                    <th>Datum</th>
-                                    <th class="text-end">Akcije</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for trka in trke %}
-                                <tr>
-                                    <td><strong>{{ trka.naziv_trke }}</strong><br><small class="text-muted">{{ trka.staza }}, {{ trka.drzava }}</small></td>
-                                    <td><span class="badge bg-primary">{{ trka.sampionat }}</span></td>
-                                    <td>{{ trka.datum_odrzavanja|date:"d. M Y." }}</td>
-                                    <td class="text-end">
-                                        <a href="#" class="btn btn-sm btn-outline-success">Sektori i Karte</a>
-                                        <button class="btn btn-sm btn-outline-danger">Obriši</button>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">Trenutno nemate dodatih trka.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+                    <div class="card-body bg-white">
+                        {% if trke %}
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Naziv trke</th>
+                                            <th>Šampionat</th>
+                                            <th>Staza</th>
+                                            <th>Datum</th>
+                                            <th class="text-end">Akcije</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for trka in trke %}
+                                            <tr>
+                                                <td class="fw-bold" style="color: var(--hub-blue);">{{ trka.naziv_trke }}</td>
+                                                <td><span class="badge" style="background-color: var(--hub-red);">{{ trka.sampionat }}</span></td>
+                                                <td>{{ trka.staza }}, {{ trka.drzava }}</td>
+                                                <td>{{ trka.datum }}</td>
+                                                <td class="text-end">
+                                                                        <a href="{% url 'upravljaj_sektorima' trka.id_trke %}" class="btn btn-sm btn-action">Sektori i Karte</a>
+                                                                        <a href="{% url 'obrisi_trku' trka.id_trke %}" class="btn btn-sm btn-outline-danger ms-1" onclick="return confirm('Da li ste sigurni da želite da obrišete ovu trku i sve njene sektore?');">Obriši</a>
+                                                                    </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-warning mb-0 border-warning">
+                                Trenutno nemate dodatih trka u sistemu.
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -115,5 +148,32 @@
             <p class="mb-0">Automotosport Travel Hub &copy; 2026 - ETF Beograd</p>
         </div>
     </footer>
+
+    <script>
+    document.getElementById('naziv_trke').addEventListener('blur', function() {
+        let unetiNaziv = this.value;
+        let porukaDiv = document.getElementById('naziv-error-poruka');
+        let dugme = document.getElementById('submit-btn');
+
+        if (unetiNaziv.trim() === '') {
+            porukaDiv.innerHTML = '';
+            dugme.disabled = false;
+            return;
+        }
+
+        fetch(`/organizator/proveri-naziv/?naziv_trke=${encodeURIComponent(unetiNaziv)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.postoji) {
+                    porukaDiv.innerHTML = '<span class="text-danger small fw-bold">⚠️ Ova trka je već uneta u sistem!</span>';
+                    dugme.disabled = true;
+                } else {
+                    porukaDiv.innerHTML = '<span class="text-success small fw-bold">✅ Naziv je dostupan.</span>';
+                    dugme.disabled = false;
+                }
+            })
+            .catch(error => console.error('Greška pri AJAX verifikaciji:', error));
+    });
+    </script>
 </body>
 </html>

@@ -5,7 +5,7 @@ from django.shortcuts import render, redirect
 from django.utils.dateparse import parse_date
 from .models import Trka, Korisnik
 from .models import Sektor
-
+from django.http import JsonResponse
 def organizator_dashboard(request):
     trke = Trka.objects.all()
     return render(request, 'organizator/dashboard.html', {'trke': trke})
@@ -16,7 +16,7 @@ def dodaj_trku(request):
         sampionat = request.POST.get('sampionat')
         staza = request.POST.get('staza')
         drzava = request.POST.get('drzava')
-        datum = request.POST.get('datum_odrzavanja')
+        datum = request.POST.get('datum')
 
         organizator = Korisnik.objects.first()
 
@@ -65,3 +65,31 @@ def upravljaj_sektorima(request, id_trke):
         'trka': trka,
         'sektori': sektori
     })
+
+
+def proveri_naziv_trke(request):
+    """
+    AJAX poziv: Proverava da li trka sa zadatim nazivom već postoji u bazi.
+    """
+    naziv = request.GET.get('naziv_trke', None)
+
+    # Proveravamo bazu (korišćenjem __iexact ignorišemo velika i mala slova)
+    postoji = Trka.objects.filter(naziv_trke__iexact=naziv).exists()
+
+    # Vraćamo odgovor u JSON formatu
+    return JsonResponse({'postoji': postoji})
+def obrisi_trku(request, id_trke):
+    """Briše trku i automatski sve njene sektore iz baze."""
+    trka = Trka.objects.filter(id_trke=id_trke).first()
+    if trka:
+        trka.delete()
+    return redirect('organizator_dashboard')
+
+def obrisi_sektor(request, id_sektora):
+    """Briše specifičan sektor i vraća korisnika na stranicu te trke."""
+    sektor = Sektor.objects.filter(id_sektora=id_sektora).first()
+    if sektor:
+        id_trke = sektor.id_trke.id_trke  # Čuvamo ID trke da bismo znali gde da se vratimo
+        sektor.delete()
+        return redirect('upravljaj_sektorima', id_trke=id_trke)
+    return redirect('organizator_dashboard')
