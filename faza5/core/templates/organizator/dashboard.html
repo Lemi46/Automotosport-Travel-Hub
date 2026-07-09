@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Organizator Dashboard | Automotosport Travel Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --hub-blue: #003580; --hub-red: #E10600; --hub-light: #f5f7fa; }
+        body { background-color: var(--hub-light); font-family: 'Segoe UI', sans-serif; }
+        .navbar { background-color: var(--hub-blue); border-bottom: 4px solid var(--hub-red); }
+        .navbar-brand { font-weight: bold; color: white !important; text-transform: uppercase; }
+        .role-indicator { background-color: white; color: var(--hub-blue); padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; border: 2px solid var(--hub-red); }
+        .btn-action { background-color: var(--hub-blue); color: white; }
+        footer { background-color: #333; color: white; padding: 20px 0; margin-top: 50px; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand" href="#">🏁 Automotosport Hub</a>
+            <span class="role-indicator ms-auto">ORGANIZATOR TRKA</span>
+        </div>
+    </nav>
+
+    <main class="container">
+        <h2 class="mb-4">Upravljanje takmičenjima i trkama</h2>
+
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-dark text-white fw-bold">
+                        ➕ Dodaj Novu Trku
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" action="{% url 'dodaj_trku' %}">
+                            {% csrf_token %}
+
+                            <div class="mb-3">
+                                <label class="form-label">Naziv trke (npr. GP Monza)</label>
+                                <input type="text" name="naziv_trke" class="form-control" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Šampionat</label>
+                                <select name="sampionat" class="form-select" required>
+                                    <option value="F1">Formula 1</option>
+                                    <option value="MotoGP">MotoGP</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Staza</label>
+                                <input type="text" name="staza" class="form-control" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Država</label>
+                                <input type="text" name="drzava" class="form-control" required>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Datum održavanja</label>
+                                <input type="date" name="datum_odrzavanja" class="form-control" required>
+                            </div>
+
+                            <button type="submit" class="btn btn-action w-100 fw-bold">Sačuvaj u bazu</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white fw-bold border-bottom">
+                        📋 Moje aktivne trke
+                    </div>
+                    <div class="card-body p-0">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Trka</th>
+                                    <th>Šampionat</th>
+                                    <th>Datum</th>
+                                    <th class="text-end">Akcije</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for trka in trke %}
+                                <tr>
+                                    <td><strong>{{ trka.naziv_trke }}</strong><br><small class="text-muted">{{ trka.staza }}, {{ trka.drzava }}</small></td>
+                                    <td><span class="badge bg-primary">{{ trka.sampionat }}</span></td>
+                                    <td>{{ trka.datum_odrzavanja|date:"d. M Y." }}</td>
+                                    <td class="text-end">
+                                        <a href="#" class="btn btn-sm btn-outline-success">Sektori i Karte</a>
+                                        <button class="btn btn-sm btn-outline-danger">Obriši</button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">Trenutno nemate dodatih trka.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center">
+        <div class="container">
+            <p class="mb-0">Automotosport Travel Hub &copy; 2026 - ETF Beograd</p>
+        </div>
+    </footer>
+</body>
+</html>
