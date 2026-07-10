@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import path
 from core import views_organizator
-
+from core import views_hotelijer
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('organizator/', views_organizator.organizator_dashboard, name='organizator_dashboard'),
@@ -10,4 +10,8 @@ urlpatterns = [
     path('organizator/proveri-naziv/', views_organizator.proveri_naziv_trke, name='proveri_naziv_trke'),
     path('organizator/trka/<int:id_trke>/obrisi/', views_organizator.obrisi_trku, name='obrisi_trku'),
     path('organizator/sektor/<int:id_sektora>/obrisi/', views_organizator.obrisi_sektor, name='obrisi_sektor'),
+
+path('hotelijer/', views_hotelijer.partner_dashboard, name='partner_dashboard'),
+path('hotelijer/obrisi/<int:id_smestaja>/', views_hotelijer.obrisi_smestaj, name='obrisi_smestaj'),
+
 ]
