@@ -1,0 +1,125 @@
+<!--Autor: Milica Štavljanin 391/2023-->
+<!--Stranica sa detaljima trke: dostupni sektori na tribinama i
+    preporuceni hoteli sortirani po udaljenosti od staze (SSU2/SSU3).-->
+{% load static %}
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ trka.naziv_trke }} | Automotosport Travel Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --hub-blue: #003580; --hub-red: #E10600; --hub-light: #f5f7fa; }
+        body { background-color: var(--hub-light); font-family: 'Segoe UI', sans-serif; }
+        .navbar { background-color: var(--hub-blue); border-bottom: 4px solid var(--hub-red); }
+        .navbar-brand { font-weight: bold; color: white !important; text-transform: uppercase; }
+        .role-indicator { background-color: white; color: var(--hub-blue); padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; border: 2px solid var(--hub-red); }
+        .btn-reserve { background-color: var(--hub-red); color: white; font-weight: bold; border: none; }
+        .btn-reserve:hover { background-color: #b30500; color: white; }
+        .card-radio { transition: transform 0.2s; cursor: pointer; }
+        .card-radio:hover { transform: translateY(-3px); box-shadow: 0 .5rem 1rem rgba(0,0,0,.15)!important; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{% url 'pretraga_trka' %}">
+                <img src="{% static 'logo.jpeg' %}" alt="Logo" height="40" class="me-2">
+                <span>Automotosport Travel Hub</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center">
+                <a href="{% url 'korpa' %}" class="btn btn-outline-light fw-bold me-3">🛒 Korpa</a>
+                <span class="role-indicator">STATUS: KUPAC</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mt-5">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="fw-bold" style="color: var(--hub-blue);">{{ trka.naziv_trke }}</h2>
+                <p class="text-muted fs-5">
+                    📍 {{ trka.staza }}, {{ trka.drzava }} &middot;
+                    📅 {{ trka.datum_odrzavanja|date:"d.m.Y" }} &middot;
+                    <span class="badge bg-dark">{{ trka.sampionat }}</span>
+                </p>
+            </div>
+        </div>
+
+        {% if greska %}
+            <div class="alert alert-danger fw-bold shadow-sm">{{ greska }}</div>
+        {% endif %}
+
+        <form method="post" action="{% url 'dodaj_u_korpu' trka.id_trke %}">
+            {% csrf_token %}
+
+            <h4 class="mt-4 fw-bold" style="color: var(--hub-blue);">1. Izaberi sektor na tribini</h4>
+            <hr>
+            <div class="row g-3 mb-5">
+                {% for sektor in sektori %}
+                    <div class="col-md-4">
+                        <div class="form-check card p-3 shadow-sm h-100 card-radio {% if sektor.slobodna_mesta <= 0 %}bg-light opacity-50{% endif %}">
+                            <input class="form-check-input ms-1 mt-2" type="radio" name="id_sektora"
+                                   value="{{ sektor.id_sektora }}" id="sektor{{ sektor.id_sektora }}"
+                                   {% if sektor.slobodna_mesta <= 0 %}disabled{% endif %} required>
+                            <label class="form-check-label w-100 ms-2" for="sektor{{ sektor.id_sektora }}">
+                                <strong class="fs-5">{{ sektor.naziv_sektora }}</strong><br>
+                                <span class="fs-5 fw-bold" style="color: var(--hub-red);">{{ sektor.cena_karte }} €</span><br>
+                                {% if sektor.slobodna_mesta > 0 %}
+                                    <span class="text-success fw-bold small">Slobodnih mesta: {{ sektor.slobodna_mesta }}</span>
+                                {% else %}
+                                    <span class="text-danger fw-bold small">Nema slobodnih mesta</span>
+                                {% endif %}
+                            </label>
+                        </div>
+                    </div>
+                {% empty %}
+                    <div class="col-12">
+                        <div class="alert alert-warning">Nema definisanih sektora za ovu trku.</div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <h4 class="fw-bold" style="color: var(--hub-blue);">2. Izaberi smeštaj</h4>
+            <hr>
+            {% if nema_smestaja %}
+                <div class="alert alert-warning fw-bold">Trenutno nema dostupnog smeštaja za izabrani događaj.</div>
+            {% else %}
+                <div class="row g-3 mb-5">
+                    {% for smestaj in smestaji %}
+                        <div class="col-md-4">
+                            <div class="form-check card p-3 shadow-sm h-100 card-radio {% if smestaj.broj_slobodnih_soba <= 0 %}bg-light opacity-50{% endif %}">
+                                <input class="form-check-input ms-1 mt-2" type="radio" name="id_smestaja"
+                                       value="{{ smestaj.id_smestaja }}" id="smestaj{{ smestaj.id_smestaja }}"
+                                       {% if smestaj.broj_slobodnih_soba <= 0 %}disabled{% endif %} required>
+                                <label class="form-check-label w-100 ms-2" for="smestaj{{ smestaj.id_smestaja }}">
+                                    <strong class="fs-5">{{ smestaj.naziv_smestaja }}</strong><br>
+                                    <small class="text-muted">📍 {{ smestaj.lokacija }} ({{ smestaj.udaljenost_od_staze }} km od staze)</small><br>
+                                    <span class="fs-5 fw-bold" style="color: var(--hub-red);">{{ smestaj.cena_po_nocenju }} € <span class="fs-6 text-dark">/ noć</span></span><br>
+                                    {% if smestaj.broj_slobodnih_soba > 0 %}
+                                        <span class="text-success fw-bold small">Slobodnih soba: {{ smestaj.broj_slobodnih_soba }}</span>
+                                    {% else %}
+                                        <span class="text-danger fw-bold small">Nema slobodnih soba</span>
+                                    {% endif %}
+                                </label>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="d-grid mb-5">
+                <button type="submit" class="btn btn-reserve btn-lg shadow" {% if nema_smestaja %}disabled{% endif %}>
+                    DODAJ U KORPU
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <footer class="text-center">
+        <div class="container">
+            <p class="mb-0">Automotosport Travel Hub &copy; 2026 - ETF Beograd</p>
+        </div>
+    </footer>
+</body>
+</html>
