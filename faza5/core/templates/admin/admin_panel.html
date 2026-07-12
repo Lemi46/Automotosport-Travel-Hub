@@ -1,0 +1,146 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrator | Automotosport Travel Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root { --hub-blue: #003580; --hub-red: #E10600; --hub-light: #f5f7fa; }
+        body { background-color: var(--hub-light); font-family: 'Segoe UI', sans-serif; }
+        .navbar { background-color: #1a1a1a; border-bottom: 4px solid #ffcc00; } /* Zlatna linija za admina */
+        .navbar-brand { font-weight: bold; color: white !important; text-transform: uppercase; }
+        .role-indicator { background-color: white; color: #1a1a1a; padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; border: 2px solid #ffcc00; }
+        footer { background-color: #333; color: white; padding: 20px 0; margin-top: 50px; }
+        .stat-card { border-left: 5px solid #ffcc00; transition: transform 0.2s; }
+        .stat-card:hover { transform: scale(1.02); }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg sticky-top shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="#">
+                <img src="{% static 'logo.jpeg' %}" alt="Logo" height="40" class="me-2">
+                <span>Automotosport Travel Hub</span>
+            </a>
+            <div class="ms-auto d-flex align-items-center">
+                <span class="role-indicator">STATUS: ADMINISTRATOR</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-5">
+
+        <div class="row mb-5">
+            <div class="col-md-12">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold" style="color: #1a1a1a;">Statistika platforme</h4>
+                    <select id="period-select" class="form-select w-auto border-dark fw-bold">
+                        <option value="sve">Ukupno za sva vremena</option>
+                        <option value="mesec">Poslednjih 30 dana</option>
+                        <option value="godina">Poslednja godina</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card stat-card shadow-sm border-0 bg-white">
+                    <div class="card-body py-4 text-center">
+                        <h6 class="text-muted text-uppercase fw-bold mb-3">Ukupna finansijska zarada</h6>
+                        <h1 class="fw-bold text-success display-5" id="prikaz-zarade">Učitavanje...</h1>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <div class="card stat-card shadow-sm border-0 bg-white">
+                    <div class="card-body py-4 text-center">
+                        <h6 class="text-muted text-uppercase fw-bold mb-3">Broj prodatih paketa / noćenja</h6>
+                        <h1 class="fw-bold text-primary display-5" id="prikaz-prodatih">...</h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header text-white" style="background-color: #1a1a1a;">
+                <h5 class="mb-0">Upravljanje korisnicima (SSU 5)</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Ime i Prezime (Email)</th>
+                                <th>Uloga</th>
+                                <th>Status</th>
+                                <th class="text-end">Akcija</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for korisnik in korisnici %}
+                            <tr {% if korisnik.uloga == 'Administrator' %}class="table-warning"{% endif %}>
+                                <td class="fw-bold text-muted">#{{ korisnik.id_korisnika }}</td>
+                                <td>
+                                    <strong>{{ korisnik.ime }} {{ korisnik.prezime }}</strong><br>
+                                    <small class="text-muted">{{ korisnik.email }}</small>
+                                </td>
+                                <td>{{ korisnik.uloga }}</td>
+                                <td>
+                                    {% if korisnik.status_naloga == 'Suspendovan' %}
+                                        <span class="badge bg-danger">Suspendovan</span>
+                                    {% elif korisnik.status_naloga == 'Aktivan' %}
+                                        <span class="badge bg-success">Aktivan</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ korisnik.status_naloga }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    {% if korisnik.uloga == 'Administrator' %}
+                                        <button class="btn btn-sm btn-outline-dark" onclick="alert('Nije dozvoljeno suspendovanje administratorskih naloga (SSU 5)!')">🚫 Suspenduj</button>
+                                    {% elif korisnik.status_naloga == 'Suspendovan' %}
+                                        <button class="btn btn-sm btn-outline-secondary" disabled>🚫 Suspenduj</button>
+                                    {% else %}
+                                        <a href="{% url 'suspenduj_korisnika' korisnik.id_korisnika %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Da li ste sigurni da želite da suspendujete ovog korisnika? Prema SSU 5, sve njegove buduće rezervacije biće otkazane.');">🚫 Suspenduj</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center">
+        <div class="container">
+            <p class="mb-0">Automotosport Travel Hub &copy; 2026 - ETF Beograd</p>
+        </div>
+    </footer>
+
+    <script>
+        // Funkcija koja gađa naš Python endpoint (api_statistika)
+        function ucitajStatistiku(period) {
+            fetch(`/admin-panel/statistika/?period=${period}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Dinamički osvežavamo HTML elemente bez reloada stranice
+                    document.getElementById('prikaz-zarade').innerText = data.zarada.toFixed(2) + ' €';
+                    document.getElementById('prikaz-prodatih').innerText = data.prodato;
+                })
+                .catch(error => console.error('Greška pri dohvatanju statistike:', error));
+        }
+
+        // 1. Kada se stranica tek učita, automatski povuci podatke za "sve vreme"
+        document.addEventListener("DOMContentLoaded", () => {
+            ucitajStatistiku('sve');
+        });
+
+        // 2. Kada admin promeni vrednost u padajućem meniju, osveži podatke
+        document.getElementById('period-select').addEventListener('change', function() {
+            ucitajStatistiku(this.value);
+        });
+    </script>
+</body>
+</html>
