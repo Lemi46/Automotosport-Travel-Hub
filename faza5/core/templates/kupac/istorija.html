@@ -1,0 +1,63 @@
+{# Autor:Milica Štavljanin 0391/2023;  #}
+{% extends 'base.html' %}
+{% block title %}Moje kupovine · Automotosport Travel Hub{% endblock %}
+{% block content %}
+<section class="page-banner compact">
+    <div class="container">
+        <span class="eyebrow">Nalog kupca</span>
+        <h1>Istorija kupovina</h1>
+        <p>Pregled aktivnih, završenih i otkazanih rezervacija.</p>
+    </div>
+</section>
+<section class="section">
+    <div class="container">
+        <div class="table-wrap">
+            <table data-testid="purchase-history">
+                <thead>
+                    <tr>
+                        <th>Trka</th>
+                        <th>Paket</th>
+                        <th>Datum kupovine</th>
+                        <th>Cena</th>
+                        <th>Status</th>
+                        <th>Akcije</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for rezervacija in rezervacije %}
+                <tr>
+                    <td>
+                        <strong>{{ rezervacija.trka.naziv_trke }}</strong>
+                        <small class="table-subline">{{ rezervacija.trka.datum_odrzavanja|date:'d.m.Y.' }}</small>
+                    </td>
+                    <td>{{ rezervacija.id_sektora.naziv_sektora }}
+                        <small class="table-subline">{{ rezervacija.id_smestaja.naziv_smestaja }}</small>
+                    </td>
+                    <td>{{ rezervacija.datum_kreiranja|date:'d.m.Y. H:i' }}</td>
+                    <td>{{ rezervacija.ukupna_cena|floatformat:2 }} EUR</td>
+                    <td>
+                        <span class="status status-{{ rezervacija.status_rezervacije|lower }}">{{ rezervacija.get_status_rezervacije_display }}</span>
+                    </td>
+                    <td>
+                        <div class="action-stack">{% if rezervacija.vaucer %}
+                            <a href="{% url 'preuzmi_vaucer' rezervacija.vaucer.id_vaucera %}">PDF vaučer</a>
+                            {% endif %}{% if rezervacija.status_rezervacije == status_aktivna %}
+                            <form method="post" action="{% url 'otkazi_rezervaciju' rezervacija.id_rezervacije %}" data-confirm="Otkazati rezervaciju i vratiti kapacitete?">{% csrf_token %}
+                                <button class="text-button danger" type="submit">Otkaži</button>
+                            </form>{% elif rezervacija.status_rezervacije == status_zavrsena and not rezervacija.recenzija %}
+                            <a href="{% url 'ostavi_recenziju' rezervacija.id_rezervacije %}">Ostavi recenziju</a>
+                            {% elif rezervacija.recenzija %}
+                            <span>Ocenjeno</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>{% empty %}
+                <tr>
+                    <td colspan="6">Još nemate kupovine u istoriji.</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>{% endblock %}

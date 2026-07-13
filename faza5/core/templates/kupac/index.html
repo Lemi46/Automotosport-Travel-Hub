@@ -1,0 +1,39 @@
+{# Autori: Milan Lemić 0323/2023; Milica Štavljanin 0391/2023; Marko Mandić 0625/2023 #}
+{% extends 'base.html' %}
+{% block title %}Početna · Automotosport Travel Hub{% endblock %}
+{% block content %}
+<section class="hero">
+    <div class="container hero-grid">
+        <div>
+            <span class="eyebrow">Trka + smeštaj u jednom paketu</span>
+            <h1>Doživite najvažnije auto-moto trke uživo.</h1>
+            <p>Pretražite događaje, izaberite sektor i raspoloživ smeštaj, a zatim preuzmite digitalni vaučer.</p>
+            <div class="hero-actions">
+                <a class="button button-primary button-large" href="{% url 'pretraga_trka' %}" data-testid="search-races-cta">Pronađi trku</a>
+                {% if not session_user %}<a class="button button-secondary button-large" href="{% url 'auth' %}">Kreiraj nalog</a>{% endif %}
+            </div>
+        </div>
+        <div class="hero-panel" aria-label="Prednosti platforme">
+            <div><strong>3</strong><span>šampionata iz baze</span></div>
+            <div><strong>1</strong><span>objedinjena rezervacija</span></div>
+            <div><strong>PDF</strong><span>digitalni vaučer</span></div>
+        </div>
+    </div>
+</section>
+<section class="section">
+    <div class="container">
+        <div class="section-heading">
+            <div><span class="eyebrow">Najbliži događaji</span><h2>Raspoloživi paketi</h2></div>
+            <a href="{% url 'pretraga_trka' %}">Prikaži sve →</a>
+        </div>
+        {% include 'kupac/_lista_trka.html' with trke=trke %}
+    </div>
+</section>
+<section class="section section-muted">
+    <div class="container process-grid">
+        <article><span>01</span><h3>Filtrirajte trke</h3><p>Birajte šampionat, lokaciju i datum.</p></article>
+        <article><span>02</span><h3>Sastavite paket</h3><p>Izaberite jedan sektor i jedan smeštaj iste trke.</p></article>
+        <article><span>03</span><h3>Preuzmite vaučer</h3><p>Posle uspešne kupovine dostupan je PDF sa QR kodom.</p></article>
+    </div>
+</section>
+{% endblock %}

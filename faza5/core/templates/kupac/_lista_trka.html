@@ -1,0 +1,25 @@
+{# Autor: Milica Štavljanin 0391/2023;  #}
+{% if trke %}
+<div class="card-grid" data-testid="race-results">
+    {% for trka in trke %}
+    <article class="race-card" data-race-id="{{ trka.id_trke }}">
+        <div class="race-card-top">
+            <span class="championship championship-{{ trka.sampionat|lower }}">{{ trka.get_sampionat_display }}</span>
+            <time datetime="{{ trka.datum_odrzavanja|date:'Y-m-d' }}">{{ trka.datum_odrzavanja|date:'d.m.Y.' }}</time>
+        </div>
+        <h3>{{ trka.naziv_trke }}</h3>
+        <p class="location">{{ trka.staza }} · {{ trka.drzava }}</p>
+        <div class="availability-row">
+            <span>{{ trka.sektori.count }} sektora</span>
+            <span>{{ trka.smestaji.count }} smeštaja</span>
+        </div>
+        <a class="button button-secondary button-block" href="{% url 'detalji_trke' trka.id_trke %}" data-testid="race-details-{{ trka.id_trke }}">Detalji i paket</a>
+    </article>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state" data-testid="no-races">
+    <strong>Nema trka za izabrane kriterijume.</strong>
+    <p>Promenite filtere ili uklonite datum pretrage.</p>
+</div>
+{% endif %}
