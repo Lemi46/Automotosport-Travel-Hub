@@ -1,142 +1,62 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="sr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Partnerski Panel | Automotosport Travel Hub</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        :root { --hub-blue: #003580; --hub-red: #E10600; --hub-light: #f5f7fa; }
-        body { background-color: var(--hub-light); font-family: 'Segoe UI', sans-serif; }
-        .navbar { background-color: var(--hub-blue); border-bottom: 4px solid var(--hub-red); }
-        .navbar-brand { font-weight: bold; color: white !important; text-transform: uppercase; }
-        .role-indicator { background-color: white; color: var(--hub-blue); padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; border: 2px solid var(--hub-red); }
-        .btn-action { background-color: var(--hub-blue); color: white; border: none; }
-        .btn-action:hover { background-color: #002255; color: white; }
-        footer { background-color: #333; color: white; padding: 20px 0; margin-top: 50px; }
-    </style>
-</head>
-<body>
-
-    <nav class="navbar navbar-expand-lg sticky-top shadow-sm">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="#">
-                <img src="{% static 'logo.jpeg' %}" alt="Logo" height="40" class="me-2">
-                <span>Automotosport Travel Hub</span>
-            </a>
-            <div class="ms-auto d-flex align-items-center">
-                <span class="role-indicator">STATUS: HOTELIJER</span>
+{#  Autor: Marko Mandić 0625/2023; . #}
+{% extends 'base.html' %}
+{% block title %}Panel hotelijera · Automotosport Travel Hub{% endblock %}
+{% block content %}
+<section class="page-banner compact">
+    <div class="container">
+        <span class="eyebrow">Hotelijer</span>
+        <h1>Upravljanje smeštajem</h1>
+        <p>Šema baze čuva agregirani smeštaj, broj slobodnih soba i jedinstvenu cenu po noćenju.</p>
+    </div>
+</section>
+<section class="section">
+    <div class="container two-column">
+        <aside class="form-card sticky-card">
+            <h2>Dodaj smeštaj</h2>
+            <form method="post">{% csrf_token %}{% include 'components/_form_fields.html' with form=form %}
+                <button class="button button-primary button-block" type="submit" data-testid="add-accommodation">Sačuvaj smeštaj</button>
+            </form>
+        </aside>
+        <div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Smeštaj</th>
+                        <th>Trka</th>
+                        <th>Lokacija</th>
+                        <th>Sobe</th>
+                        <th>Cena</th>
+                        <th>Akcije</th>
+                    </tr>
+                    </thead>
+                    <tbody>{% for smestaj in smestaji %}
+                    <tr>
+                        <td>
+                            <strong>{{ smestaj.naziv_smestaja }}</strong>
+                            <small class="table-subline">{{ smestaj.udaljenost_od_staze }} km od staze</small>
+                        </td>
+                        <td>{{ smestaj.id_trke.naziv_trke }}</td>
+                        <td>{{ smestaj.lokacija }}</td>
+                        <td>{{ smestaj.broj_slobodnih_soba }}</td>
+                        <td>{{ smestaj.cena_po_nocenju|floatformat:2 }} EUR</td>
+                        <td>
+                            <div class="action-stack">
+                                <a href="{% url 'izmeni_smestaj' smestaj.id_smestaja %}">Izmeni</a>
+                                <form method="post" action="{% url 'obrisi_smestaj' smestaj.id_smestaja %}" data-confirm="Obrisati smeštaj?">{% csrf_token %}
+                                    <button class="text-button danger" type="submit">Obriši</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">Još niste dodali smeštaj.</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-    </nav>
-
-    <main class="container my-5">
-        <div class="row">
-            <div class="col-md-3 mb-4">
-                <div class="list-group shadow-sm">
-                    <a href="#" class="list-group-item list-group-item-action active fw-bold" style="background-color: var(--hub-blue); border-color: var(--hub-blue);">Upravljanje smeštajem</a>
-                    <a href="#" class="list-group-item list-group-item-action">Statistika zarade</a>
-                </div>
-            </div>
-
-            <div class="col-md-9">
-                <div class="card shadow-sm mb-4 border-0">
-                    <div class="card-header text-white" style="background-color: var(--hub-blue);">
-                        <h5 class="mb-0">Dodaj novu smeštajnu ponudu</h5>
-                    </div>
-                    <div class="card-body bg-white">
-                        <form method="POST" action="{% url 'partner_dashboard' %}">
-                            {% csrf_token %}
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Naziv smeštaja / Hotela</label>
-                                    <input type="text" name="naziv_smestaja" class="form-control" required placeholder="npr. Hotel Centar">
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Poveži sa trkom</label>
-                                    <select name="trka_id" class="form-select" required>
-                                        <option value="">-- Izaberi trku --</option>
-                                        {% for trka in trke %}
-                                            <option value="{{ trka.id_trke }}">{{ trka.naziv_trke }} ({{ trka.staza }})</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Lokacija (Adresa/Grad)</label>
-                                    <input type="text" name="lokacija" class="form-control" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label fw-bold">Udaljenost od staze (km)</label>
-                                    <input type="number" name="udaljenost" class="form-control" required step="0.1" min="0">
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6 mb-4">
-                                    <label class="form-label fw-bold">Broj slobodnih soba</label>
-                                    <input type="number" name="broj_soba" class="form-control" required min="1">
-                                </div>
-                                <div class="col-md-6 mb-4">
-                                    <label class="form-label fw-bold">Cena po noćenju (€)</label>
-                                    <input type="number" name="cena" class="form-control" required step="0.01" min="1">
-                                </div>
-                            </div>
-                            <button type="submit" class="btn w-100 fw-bold" style="background-color: var(--hub-red); color: white;">SAČUVAJ SMEŠTAJ</button>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="card shadow-sm border-0">
-                    <div class="card-header bg-white">
-                        <h5 class="mb-0 fw-bold" style="color: var(--hub-blue);">Moje aktivne ponude</h5>
-                    </div>
-                    <div class="card-body p-0">
-                        {% if smestaji %}
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0 align-middle">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Naziv</th>
-                                        <th>Trka</th>
-                                        <th>Udaljenost</th>
-                                        <th>Slobodno soba</th>
-                                        <th>Cena/Noć</th>
-                                        <th class="text-end">Opcije</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for smestaj in smestaji %}
-                                    <tr>
-                                        <td class="fw-bold">{{ smestaj.naziv_smestaja }}</td>
-                                        <td><span class="badge bg-secondary">{{ smestaj.id_trke.naziv_trke }}</span></td>
-                                        <td>{{ smestaj.udaljenost_od_staze }} km</td>
-                                        <td class="text-success fw-bold">{{ smestaj.broj_slobodnih_soba }}</td>
-                                        <td class="fw-bold" style="color: var(--hub-red);">{{ smestaj.cena_po_nocenju }} €</td>
-                                        <td class="text-end">
-                                            <a href="{% url 'obrisi_smestaj' smestaj.id_smestaja %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Sigurno brišete ovaj smeštaj?');">Obriši</a>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        {% else %}
-                        <div class="alert alert-warning m-3 border-warning">
-                            Trenutno nemate unetih smeštaja.
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <footer class="text-center">
-        <div class="container">
-            <p class="mb-0">Automotosport Travel Hub &copy; 2026 - ETF Beograd</p>
-        </div>
-    </footer>
-</body>
-</html>
+    </div>
+</section>{% endblock %}

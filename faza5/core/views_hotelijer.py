@@ -1,53 +1,79 @@
-from django.shortcuts import render, redirect
-from core.models import Smestaj, Trka, Korisnik
+# Autor:Marko Mandić 2023/0625;
+"""Upravljanje agregiranim smeštajem prijavljenog hotelijera."""
+
+from __future__ import annotations
+
+from django.contrib import messages
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_http_methods, require_POST
+
+from .constants import ULOGA_HOTELIJER
+from .forms import SmestajForm
+from .models import Smestaj
+from .session_auth import role_required
 
 
-def partner_dashboard(request):
-    """
-    Prikazuje kontrolnu tablu hotelijera sa formom za dodavanje i tabelom postojećih smeštaja.
-    """
-    # Za sada simuliramo ulogovanog hotelijera (npr. korisnik sa ID=2)
-    # Kada proradi login sistem, ovde će ići request.user
-    hotelijer = Korisnik.objects.filter(id_korisnika=2).first()
+@require_http_methods(["GET", "POST"])
+@role_required(ULOGA_HOTELIJER)
+def partner_dashboard(request: HttpRequest) -> HttpResponse:
+    """Prikazuje smeštaje korisnika i formu za dodavanje novog zapisa."""
 
-    if request.method == 'POST':
-        # Prikupljamo podatke iz HTML forme
-        naziv = request.POST.get('naziv_smestaja')
-        lokacija = request.POST.get('lokacija')
-        udaljenost = request.POST.get('udaljenost')
-        broj_soba = request.POST.get('broj_soba')
-        cena = request.POST.get('cena')
-        id_trke = request.POST.get('trka_id')
+    form = SmestajForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        accommodation = form.save(commit=False)
+        accommodation.id_hotelijera = request.current_user
+        accommodation.save()
+        messages.success(request, "Smeštaj je dodat.")
+        return redirect("partner_dashboard")
 
-        trka_obj = Trka.objects.filter(id_trke=id_trke).first()
-
-        if naziv and trka_obj and hotelijer:
-            # Čuvamo novi smeštaj u bazu
-            Smestaj.objects.create(
-                id_hotelijera=hotelijer,
-                id_trke=trka_obj,
-                naziv_smestaja=naziv,
-                lokacija=lokacija,
-                udaljenost_od_staze=udaljenost,
-                broj_slobodnih_soba=broj_soba,
-                cena_po_nocenju=cena
-            )
-        return redirect('partner_dashboard')
-
-    # Povlačimo podatke za prikaz na stranici
-    moji_smestaji = Smestaj.objects.filter(id_hotelijera=hotelijer)
-    sve_trke = Trka.objects.all()  # Da hotelijer može da izabere za koju trku vezuje smeštaj
-
-    context = {
-        'smestaji': moji_smestaji,
-        'trke': sve_trke
-    }
-    return render(request, 'hotelijer/partner_panel.html', context)
+    accommodations = Smestaj.objects.filter(
+        id_hotelijera=request.current_user
+    ).select_related("id_trke")
+    return render(
+        request,
+        "hotelijer/partner_panel.html",
+        {"smestaji": accommodations, "form": form},
+    )
 
 
-def obrisi_smestaj(request, id_smestaja):
-    """Briše smeštaj iz baze."""
-    smestaj = Smestaj.objects.filter(id_smestaja=id_smestaja).first()
-    if smestaj:
-        smestaj.delete()
-    return redirect('partner_dashboard')
+@require_http_methods(["GET", "POST"])
+@role_required(ULOGA_HOTELIJER)
+def izmeni_smestaj(request: HttpRequest, id_smestaja: int) -> HttpResponse:
+    """Menja smeštaj koji pripada prijavljenom hotelijeru."""
+
+    accommodation = get_object_or_404(
+        Smestaj,
+        pk=id_smestaja,
+        id_hotelijera=request.current_user,
+    )
+    form = SmestajForm(request.POST or None, instance=accommodation)
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "Smeštaj je izmenjen.")
+        return redirect("partner_dashboard")
+    return render(
+        request,
+        "hotelijer/smestaj_form.html",
+        {"form": form, "smestaj": accommodation},
+    )
+
+
+@require_POST
+@role_required(ULOGA_HOTELIJER)
+def obrisi_smestaj(request: HttpRequest, id_smestaja: int) -> HttpResponse:
+    """Briše smeštaj samo ako nema rezervacija koje ga referenciraju."""
+
+    accommodation = get_object_or_404(
+        Smestaj,
+        pk=id_smestaja,
+        id_hotelijera=request.current_user,
+    )
+    if accommodation.rezervacije.exists():
+        messages.error(
+            request, "Smeštaj sa postojećim rezervacijama ne može biti obrisan."
+        )
+    else:
+        accommodation.delete()
+        messages.success(request, "Smeštaj je obrisan.")
+    return redirect("partner_dashboard")

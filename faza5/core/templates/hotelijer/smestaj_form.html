@@ -1,0 +1,18 @@
+{# # Autor: Marko Mandić 0625/2023;  #}
+{% extends 'base.html' %}
+{% block title %}Izmena smeštaja · Automotosport Travel Hub{% endblock %}
+{% block content %}
+<section class="section">
+    <div class="container narrow">
+        <div class="form-card">
+            <span class="eyebrow">Hotelijer</span>
+            <h1>Izmena smeštaja</h1>
+            <form method="post">{% csrf_token %}{% include 'components/_form_fields.html' with form=form %}
+                <div class="form-actions">
+                    <button class="button button-primary" type="submit">Sačuvaj izmene</button>
+                    <a class="button button-ghost" href="{% url 'partner_dashboard' %}">Odustani</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>{% endblock %}
