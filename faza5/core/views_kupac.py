@@ -1,276 +1,314 @@
-# Milica Štavljanin 391/2023
-# Modul: Kupac i Rezervacija
+# Autor:Milica Štavljanin 0391/2023;
+"""Javne stranice i kompletan tok kupovine paketa za kupca."""
 
-import uuid
+from __future__ import annotations
 
-from django.http import JsonResponse
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.decorators.http import require_GET, require_POST
+from datetime import date
 
-from .models import Trka, Sektor, Smestaj, Rezervacija, DigitalniVaucer, Korisnik
+from django.conf import settings
+from django.contrib import messages
+from django.db.models import Q
+from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 
-
-def _trenutni_kupac(request):
-    """
-    Pomocna funkcija koja vraca ulogovanog Korisnika (Kupca) na osnovu
-    podatka iz sesije, ili None ako niko nije ulogovan.
-
-    Vraca: Korisnik instancu ili None
-    """
-    id_korisnika = request.session.get('id_korisnika')  # USKLADITI SA PRIJAVOM
-    if not id_korisnika:
-        return None
-    try:
-        return Korisnik.objects.get(pk=id_korisnika)
-    except Korisnik.DoesNotExist:
-        return None
-
-
-@require_GET
-def pretraga_trka(request):
-    """
-    SSU2 - Glavna stranica za pretragu i filtriranje trkackih dogadjaja.
-
-    Prikazuje pocetnu listu trka i formu za filtriranje po sampionatu i
-    lokaciji. Sama lista se dalje osvezava AJAX pozivom (view
-    ajax_filtriraj_trke iz ovog fajla), ova funkcija samo iscrtava
-    pocetnu stranicu sa svim trkama.
-
-    Vraca: HttpResponse sa render-ovanim kupac/pretraga.html templateom
-    """
-    sampionati = Trka.objects.values_list('sampionat', flat=True).distinct()
-    pocetna_lista_trka = Trka.objects.all().order_by('datum_odrzavanja')
-
-    context = {
-        'sampionati': sorted(set(sampionati)),
-        'trke': pocetna_lista_trka,
-    }
-    return render(request, 'kupac/pretraga.html', context)
+from .constants import (
+    SAMPIONATI,
+    STATUS_REZERVACIJE_AKTIVNA,
+    STATUS_REZERVACIJE_KORPA,
+    STATUS_REZERVACIJE_ZAVRSENA,
+    ULOGA_ADMINISTRATOR,
+    ULOGA_KUPAC,
+)
+from .forms import PackageForm, RecenzijaForm
+from .models import DigitalniVaucer, Recenzija, Rezervacija, Smestaj, Trka
+from .pdf_utils import build_voucher_pdf
+from .services import (
+    AvailabilityError,
+    BusinessRuleError,
+    cancel_reservation,
+    create_cart_reservation,
+    finalize_reservation,
+    mark_past_reservations_complete,
+)
+from .session_auth import get_session_user, role_required
 
 
-@require_GET
-def ajax_filtriraj_trke(request):
-    """
-    SSU2 - AJAX endpoint (Posebni zahtevi: filtriranje u realnom vremenu
-    bez ponovnog ucitavanja stranice) koji vraca JSON listu trka
-    filtriranih po sampionatu i/ili lokaciji (drzava ili staza).
+def _filtered_races(request: HttpRequest):
+    """Gradi upit za pretragu isključivo nad kolonama tabele ``trka``."""
 
-    Ocekivani GET parametri:
-        sampionat (str, opciono) - npr. "F1", "MotoGP", "WSBK"
-        lokacija (str, opciono)  - pretrazuje po drzavi ili nazivu staze
+    races = Trka.objects.filter(datum_odrzavanja__gte=date.today()).select_related(
+        "id_organizatora"
+    )
+    championship = request.GET.get("sampionat", "").strip()
+    location = request.GET.get("lokacija", "").strip()
+    race_date = request.GET.get("datum", "").strip()
+    query = request.GET.get("q", "").strip()
 
-    Vraca: JsonResponse sa listom trka (ili poruku ako nema rezultata -
-    alternativni scenario "Nema rezultata pretrage")
-    """
-    sampionat = request.GET.get('sampionat', '').strip()
-    lokacija = request.GET.get('lokacija', '').strip()
-
-    trke = Trka.objects.all()
-
-    if sampionat:
-        trke = trke.filter(sampionat=sampionat)
-
-    if lokacija:
-        trke = (
-            trke.filter(drzava__icontains=lokacija)
-            | trke.filter(staza__icontains=lokacija)
+    if championship in dict(SAMPIONATI):
+        races = races.filter(sampionat=championship)
+    if location:
+        races = races.filter(
+            Q(drzava__icontains=location) | Q(staza__icontains=location)
+        )
+    if race_date:
+        races = races.filter(datum_odrzavanja=race_date)
+    if query:
+        races = races.filter(
+            Q(naziv_trke__icontains=query)
+            | Q(staza__icontains=query)
+            | Q(drzava__icontains=query)
         )
 
-    trke = trke.order_by('datum_odrzavanja')
+    return races.prefetch_related("sektori", "smestaji").order_by(
+        "datum_odrzavanja", "naziv_trke"
+    )
 
-    if not trke.exists():
-        return JsonResponse({
-            'rezultati': [],
-            'poruka': 'Nema trka za taj filter',
-        })
 
-    podaci = [
+@require_GET
+def index_strana(request: HttpRequest) -> HttpResponse:
+    """Prikazuje javnu naslovnu stranu i najbliže raspoložive trke."""
+
+    races = (
+        Trka.objects.filter(
+            datum_odrzavanja__gte=date.today(),
+            sektori__slobodna_mesta__gt=0,
+            smestaji__broj_slobodnih_soba__gt=0,
+        )
+        .distinct()
+        .select_related("id_organizatora")
+        .order_by("datum_odrzavanja")[:6]
+    )
+    return render(request, "kupac/index.html", {"trke": races})
+
+
+@require_GET
+def pretraga_trka(request: HttpRequest) -> HttpResponse:
+    """Prikazuje punu stranu pretrage sa početnim rezultatima."""
+
+    races = _filtered_races(request)
+    return render(
+        request,
+        "kupac/pretraga.html",
         {
-            'id_trke': t.id_trke,
-            'naziv_trke': t.naziv_trke,
-            'staza': t.staza,
-            'drzava': t.drzava,
-            'datum_odrzavanja': t.datum_odrzavanja.strftime('%d.%m.%Y'),
-            'sampionat': t.sampionat,
-        }
-        for t in trke
-    ]
-    return JsonResponse({'rezultati': podaci, 'poruka': None})
+            "trke": races,
+            "sampionati": SAMPIONATI,
+            "broj_rezultata": races.count(),
+        },
+    )
 
 
 @require_GET
-def detalji_trke(request, id_trke):
-    """
-    SSU2 / SSU3 - Prikaz detalja izabrane trke: dostupni sektori na
-    tribinama i lista preporucenih hotela sortirana po udaljenosti od
-    staze (najblizi prvi).
+def ajax_filtriraj_trke(request: HttpRequest) -> JsonResponse:
+    """AJAX endpoint vraća HTML kartica i broj rezultata bez osvežavanja strane."""
 
-    Vraca: HttpResponse sa render-ovanim kupac/detalji_trke.html templateom
-    """
-    trka = get_object_or_404(Trka, pk=id_trke)
-    sektori = Sektor.objects.filter(id_trke=trka).order_by('naziv_sektora')
-    smestaji = Smestaj.objects.filter(id_trke=trka).order_by('udaljenost_od_staze')
-
-    context = {
-        'trka': trka,
-        'sektori': sektori,
-        'smestaji': smestaji,
-        'nema_smestaja': not smestaji.exists(),
-    }
-    return render(request, 'kupac/detalji_trke.html', context)
-
-
-@require_POST
-def dodaj_u_korpu(request, id_trke):
-    """
-    SSU3 - Kupac bira sektor i smestaj, sistem kreira privremenu
-    Rezervaciju sa statusom 'U_korpi'.
-
-    Pokriva alternativne scenarije:
-        - Nema slobodnih mesta u sektoru
-        - Nema dostupnog smestaja
-
-    Ocekivani POST parametri: id_sektora, id_smestaja
-
-    Vraca: redirect na stranicu korpe, ili detalji_trke sa porukom o
-    gresci ako nema slobodnih mesta/soba
-    """
-    kupac = _trenutni_kupac(request)
-    if kupac is None:
-        return redirect('auth')  # USKLADITI SA PRIJAVOM - naziv url rute za login
-
-    trka = get_object_or_404(Trka, pk=id_trke)
-    id_sektora = request.POST.get('id_sektora')
-    id_smestaja = request.POST.get('id_smestaja')
-
-    sektor = get_object_or_404(Sektor, pk=id_sektora, id_trke=trka)
-    smestaj = get_object_or_404(Smestaj, pk=id_smestaja, id_trke=trka)
-
-    sektori_svi = Sektor.objects.filter(id_trke=trka)
-    smestaji_svi = Smestaj.objects.filter(id_trke=trka).order_by('udaljenost_od_staze')
-
-    if sektor.slobodna_mesta <= 0:
-        return render(request, 'kupac/detalji_trke.html', {
-            'trka': trka, 'sektori': sektori_svi, 'smestaji': smestaji_svi,
-            'greska': 'Nema slobodnih mesta u izabranom sektoru',
-        })
-
-    if smestaj.broj_slobodnih_soba <= 0:
-        return render(request, 'kupac/detalji_trke.html', {
-            'trka': trka, 'sektori': sektori_svi, 'smestaji': smestaji_svi,
-            'greska': 'Nema dostupnog smestaja za izabrani dogadjaj',
-        })
-
-    ukupna_cena = sektor.cena_karte + smestaj.cena_po_nocenju
-
-    Rezervacija.objects.create(
-        id_kupca=kupac,
-        id_sektora=sektor,
-        id_smestaja=smestaj,
-        ukupna_cena=ukupna_cena,
-        status_rezervacije='U_korpi',
+    races = _filtered_races(request)
+    html = render_to_string(
+        "kupac/_lista_trka.html", {"trke": races}, request=request
     )
-
-    return redirect('korpa')
+    return JsonResponse({"html": html, "count": races.count()})
 
 
 @require_GET
-def korpa(request):
-    """
-    SSU3 - Prikaz trenutne korpe kupca: sve njegove Rezervacije sa
-    statusom 'U_korpi' koje jos nisu potvrdjene/placene.
+def detalji_trke(request: HttpRequest, id_trke: int) -> HttpResponse:
+    """Prikazuje sektore, smeštaje i postojeće recenzije jedne trke."""
 
-    Vraca: HttpResponse sa render-ovanim kupac/korpa.html templateom
-    """
-    kupac = _trenutni_kupac(request)
-    if kupac is None:
-        return redirect('auth')  # USKLADITI SA PRIJAVOM
-
-    stavke = Rezervacija.objects.filter(
-        id_kupca=kupac, status_rezervacije='U_korpi'
-    ).select_related('id_sektora', 'id_smestaja')
-
-    ukupno = sum(s.ukupna_cena for s in stavke)
-
-    return render(request, 'kupac/korpa.html', {
-        'stavke': stavke,
-        'ukupno': ukupno,
-    })
+    race = get_object_or_404(
+        Trka.objects.select_related("id_organizatora").prefetch_related(
+            "sektori", "smestaji"
+        ),
+        pk=id_trke,
+    )
+    reviews = Recenzija.objects.filter(
+        id_rezervacije__id_sektora__id_trke=race
+    ).select_related("id_kupca")[:8]
+    form = PackageForm(race=race)
+    return render(
+        request,
+        "kupac/detalji_trke.html",
+        {"trka": race, "package_form": form, "recenzije": reviews},
+    )
 
 
 @require_POST
-def ukloni_iz_korpe(request, id_rezervacije):
-    """
-    Uklanja stavku iz korpe (Kupac odustaje pre placanja).
+@role_required(ULOGA_KUPAC)
+def dodaj_u_korpu(request: HttpRequest, id_trke: int) -> HttpResponse:
+    """Dodaje izabrani paket u korpu bez rezervisanja kapaciteta pre plaćanja."""
 
-    Vraca: redirect na stranicu korpe
-    """
-    kupac = _trenutni_kupac(request)
-    if kupac is None:
-        return redirect('auth')  # USKLADITI SA PRIJAVOM
+    race = get_object_or_404(Trka, pk=id_trke)
+    form = PackageForm(request.POST, race=race)
+    if form.is_valid():
+        try:
+            reservation, created = create_cart_reservation(
+                buyer=request.current_user,
+                sector=form.cleaned_data["id_sektora"],
+                accommodation=form.cleaned_data["id_smestaja"],
+            )
+        except BusinessRuleError as exc:
+            messages.error(request, str(exc))
+        else:
+            if created:
+                messages.success(
+                    request,
+                    f"Paket #{reservation.pk} je dodat u korpu. Kapacitet se "
+                    "konačno proverava pri plaćanju.",
+                )
+            else:
+                messages.info(request, "Isti paket se već nalazi u vašoj korpi.")
+            return redirect("korpa")
+    else:
+        for errors in form.errors.values():
+            for error in errors:
+                messages.error(request, error)
+    return redirect("detalji_trke", id_trke=race.pk)
 
-    rezervacija = get_object_or_404(
-        Rezervacija, pk=id_rezervacije, id_kupca=kupac, status_rezervacije='U_korpi'
-    )
-    rezervacija.delete()
-    return redirect('korpa')
+
+@require_GET
+@role_required(ULOGA_KUPAC)
+def korpa(request: HttpRequest) -> HttpResponse:
+    """Prikazuje samo neplaćene rezervacije prijavljenog kupca."""
+
+    reservations = Rezervacija.objects.filter(
+        id_kupca=request.current_user,
+        status_rezervacije=STATUS_REZERVACIJE_KORPA,
+    ).select_related("id_sektora__id_trke", "id_smestaja")
+    return render(request, "kupac/korpa.html", {"rezervacije": reservations})
 
 
 @require_POST
-def potvrdi_placanje(request, id_rezervacije):
-    """
-    SSU3 - Kupac potvrdjuje paket i pokrece simulaciju placanja. Ako je
-    uspesna, sistem generise digitalni vaucer sa jedinstvenim QR kodom i
-    menja status rezervacije u 'Aktivna'.
-    """
-    kupac = _trenutni_kupac(request)
-    if kupac is None:
-        return redirect('auth')  # USKLADITI SA PRIJAVOM
+@role_required(ULOGA_KUPAC)
+def ukloni_iz_korpe(request: HttpRequest, id_rezervacije: int) -> HttpResponse:
+    """Trajno uklanja neplaćenu stavku iz korpe njenog vlasnika."""
 
-    rezervacija = get_object_or_404(
-        Rezervacija, pk=id_rezervacije, id_kupca=kupac, status_rezervacije='U_korpi'
+    deleted, _ = Rezervacija.objects.filter(
+        pk=id_rezervacije,
+        id_kupca=request.current_user,
+        status_rezervacije=STATUS_REZERVACIJE_KORPA,
+    ).delete()
+    if deleted:
+        messages.info(request, "Paket je uklonjen iz korpe.")
+    else:
+        messages.error(request, "Stavka korpe nije pronađena.")
+    return redirect("korpa")
+
+
+@require_POST
+@role_required(ULOGA_KUPAC)
+def potvrdi_placanje(request: HttpRequest, id_rezervacije: int) -> HttpResponse:
+    """Obrađuje uspešno ili demonstraciono neuspešno plaćanje."""
+
+    if settings.DEMO_MODE and request.POST.get("simuliraj_neuspeh") == "1":
+        messages.error(
+            request,
+            "Plaćanje nije uspelo. Rezervacija je ostala u korpi i kapacitet nije promenjen.",
+        )
+        return redirect("korpa")
+    try:
+        voucher = finalize_reservation(
+            reservation_id=id_rezervacije, buyer=request.current_user
+        )
+    except AvailabilityError as exc:
+        messages.error(request, f"Plaćanje nije izvršeno: {exc}")
+        return redirect("korpa")
+    except BusinessRuleError as exc:
+        messages.error(request, str(exc))
+        return redirect("korpa")
+
+    messages.success(request, "Plaćanje je uspešno. Digitalni vaučer je izdat.")
+    return render(request, "kupac/potvrda.html", {"vaucer": voucher})
+
+
+@require_POST
+@role_required(ULOGA_KUPAC)
+def otkazi_rezervaciju(request: HttpRequest, id_rezervacije: int) -> HttpResponse:
+    """Otkazuje kupčevu rezervaciju uz vraćanje zauzetih kapaciteta."""
+
+    try:
+        cancel_reservation(
+            reservation_id=id_rezervacije, buyer=request.current_user
+        )
+    except BusinessRuleError as exc:
+        messages.error(request, str(exc))
+    else:
+        messages.success(request, "Rezervacija je otkazana.")
+    return redirect("istorija_kupovina")
+
+
+@require_http_methods(["GET", "POST"])
+@role_required(ULOGA_KUPAC)
+def ostavi_recenziju(request: HttpRequest, id_rezervacije: int) -> HttpResponse:
+    """Dozvoljava jednu recenziju samo za završenu kupovinu."""
+
+    mark_past_reservations_complete()
+    reservation = get_object_or_404(
+        Rezervacija.objects.select_related(
+            "id_sektora__id_trke", "id_smestaja"
+        ),
+        pk=id_rezervacije,
+        id_kupca=request.current_user,
+        status_rezervacije=STATUS_REZERVACIJE_ZAVRSENA,
+    )
+    if Recenzija.objects.filter(id_rezervacije=reservation).exists():
+        messages.info(request, "Ova rezervacija je već ocenjena.")
+        return redirect("istorija_kupovina")
+
+    form = RecenzijaForm(request.POST or None)
+    if request.method == "POST" and form.is_valid():
+        review = form.save(commit=False)
+        review.id_rezervacije = reservation
+        review.id_kupca = request.current_user
+        review.save()
+        messages.success(request, "Hvala! Recenzija je sačuvana.")
+        return redirect("istorija_kupovina")
+    return render(
+        request,
+        "kupac/recenzija_form.html",
+        {"form": form, "rezervacija": reservation},
     )
 
-    # Alternativni scenario: Neuspešno plaćanje
-    if request.POST.get('simulate_failure') == '1':
-        stavke = Rezervacija.objects.filter(id_kupca=kupac, status_rezervacije='U_korpi')
-        return render(request, 'kupac/korpa.html', {
-            'stavke': stavke,
-            'ukupno': sum(s.ukupna_cena for s in stavke),
-            'greska': 'Placanje nije uspesno, pokusajte ponovo',
-        })
 
-    # DOVUČEMO SEKTOR I SMEŠTAJ
-    sektor = rezervacija.id_sektora
-    smestaj = rezervacija.id_smestaja
+@require_GET
+@role_required(ULOGA_KUPAC, ULOGA_ADMINISTRATOR)
+def preuzmi_vaucer(request: HttpRequest, id_vaucera: int) -> HttpResponse:
+    """Vraća PDF samo vlasniku vaučera ili administratoru."""
 
-    # POSLEDNJA PROVERA: Da li su se mesta rasprodala dok je paket bio u korpi?
-    if sektor.slobodna_mesta <= 0 or smestaj.broj_slobodnih_soba <= 0:
-        stavke = Rezervacija.objects.filter(id_kupca=kupac, status_rezervacije='U_korpi')
-        return render(request, 'kupac/korpa.html', {
-            'stavke': stavke,
-            'ukupno': sum(s.ukupna_cena for s in stavke),
-            'greska': 'Žao nam je, rasprodato je dok je paket bio u korpi!',
-        })
-
-    # ODUZIMAMO MESTA IZ BAZE PODATAKA
-    sektor.slobodna_mesta -= 1
-    sektor.save()
-
-    smestaj.broj_slobodnih_soba -= 1
-    smestaj.save()
-
-    # ZAVRŠAVAMO REZERVACIJU
-    rezervacija.status_rezervacije = 'Aktivna'
-    rezervacija.save()
-
-    vaucer = DigitalniVaucer.objects.create(
-        id_rezervacije=rezervacija,
-        qr_kod=str(uuid.uuid4()),
-        status_vaucera='Validan',
+    query = DigitalniVaucer.objects.select_related(
+        "id_rezervacije__id_kupca",
+        "id_rezervacije__id_sektora__id_trke",
+        "id_rezervacije__id_smestaja",
     )
+    voucher = get_object_or_404(query, pk=id_vaucera)
+    user = get_session_user(request)
+    if user.uloga != ULOGA_ADMINISTRATOR and voucher.id_rezervacije.id_kupca_id != user.pk:
+        messages.error(request, "Nemate pristup ovom vaučeru.")
+        return redirect("istorija_kupovina")
 
-    return render(request, 'kupac/potvrda.html', {
-        'rezervacija': rezervacija,
-        'vaucer': vaucer,
-    })
+    response = HttpResponse(build_voucher_pdf(voucher), content_type="application/pdf")
+    response["Content-Disposition"] = (
+        f'attachment; filename="vaucer-{voucher.id_vaucera}.pdf"'
+    )
+    return response
+
+
+@require_GET
+@role_required(ULOGA_KUPAC)
+def istorija_kupovina(request: HttpRequest) -> HttpResponse:
+    """Prikazuje sve kupčeve plaćene, završene i otkazane pakete."""
+
+    mark_past_reservations_complete()
+    reservations = (
+        Rezervacija.objects.filter(id_kupca=request.current_user)
+        .exclude(status_rezervacije=STATUS_REZERVACIJE_KORPA)
+        .select_related("id_sektora__id_trke", "id_smestaja")
+        .prefetch_related("vaucer", "recenzija")
+    )
+    return render(
+        request,
+        "kupac/istorija.html",
+        {
+            "rezervacije": reservations,
+            "status_aktivna": STATUS_REZERVACIJE_AKTIVNA,
+            "status_zavrsena": STATUS_REZERVACIJE_ZAVRSENA,
+        },
+    )
