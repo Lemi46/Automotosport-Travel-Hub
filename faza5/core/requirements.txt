@@ -1,0 +1,9 @@
+# Autori: Milan Lemić 0323/2023; Milica Štavljanin 0391/2023; Marko Mandić 0625/2023;
+Django==6.0.7
+PyMySQL==1.2.0
+requests==2.34.2
+qrcode==8.2
+Pillow==12.3.0
+reportlab==5.0.0
+pytest==9.1.1
+pytest-django==4.12.0
