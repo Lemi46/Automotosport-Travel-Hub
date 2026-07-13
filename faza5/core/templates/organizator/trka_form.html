@@ -1,0 +1,21 @@
+{# Autor: Milan Lemić 0323/2023;  #}
+{% extends 'base.html' %}{% load static %}
+{% block title %}{{ naslov }} · Automotosport Travel Hub{% endblock %}
+{% block content %}
+<section class="section">
+    <div class="container narrow">
+        <div class="form-card">
+            <span class="eyebrow">Organizator</span>
+            <h1>{{ naslov }}</h1>
+            <form method="post" id="race-form" data-name-check-url="{% url 'proveri_naziv_trke' %}" data-race-id="{{ form.instance.pk|default:'' }}">
+                {% csrf_token %}{% include 'components/_form_fields.html' with form=form %}
+                <div id="race-name-feedback" class="help-text" aria-live="polite"></div>
+                <div class="form-actions">
+                    <button class="button button-primary" type="submit" data-testid="save-race">{{ akcija }}</button>
+                    <a class="button button-ghost" href="{% url 'organizator_dashboard' %}">Odustani</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>{% endblock %}
+{% block extra_js %}<script src="{% static 'core/js/race-name.js' %}" defer></script>{% endblock %}

@@ -1,0 +1,20 @@
+{# Autor: Milan Lemić 0323/2023; #}
+{% extends 'base.html' %}
+{% block title %}Izmena sektora · Automotosport Travel Hub{% endblock %}
+{% block content %}
+<section class="section">
+    <div class="container narrow">
+        <div class="form-card">
+            <span class="eyebrow">{{ sektor.id_trke.naziv_trke }}</span>
+            <h1>Izmena sektora</h1>
+            <p>Već prodato mesta: <strong>{{ sektor.broj_prodatih }}</strong>.</p>
+            <form method="post">
+                {% csrf_token %}{% include 'components/_form_fields.html' with form=form %}
+                <div class="form-actions">
+                    <button class="button button-primary" type="submit">Sačuvaj</button>
+                    <a class="button button-ghost" href="{% url 'upravljaj_sektorima' sektor.id_trke_id %}">Odustani</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>{% endblock %}
