@@ -1,0 +1,61 @@
+' Autor: Marko Mandić 0625/2023;
+@startuml
+actor Organizator
+boundary Pregledac
+control ViewsOrganizator
+control TrkaForm
+control SektorForm
+database Baza
+
+Organizator -> Pregledac : otvara panel
+Pregledac -> ViewsOrganizator : GET /organizator/
+ViewsOrganizator -> Baza : trke gde je id_organizatora = sesija
+Baza --> ViewsOrganizator : samo sopstvene trke
+ViewsOrganizator --> Pregledac : dashboard
+
+Organizator -> Pregledac : unosi naziv trke
+Pregledac -> ViewsOrganizator : AJAX GET proveri-naziv
+ViewsOrganizator -> Baza : postoji li naziv?
+Baza --> ViewsOrganizator : rezultat
+ViewsOrganizator --> Pregledac : JSON pomoćna poruka
+Organizator -> Pregledac : čuva trku
+Pregledac -> ViewsOrganizator : POST dodaj/izmeni
+ViewsOrganizator -> TrkaForm : puna serverska validacija
+alt duplikat ili nevalidni podaci
+  TrkaForm --> ViewsOrganizator : greške
+  ViewsOrganizator --> Pregledac : forma sa greškama
+else validno
+  ViewsOrganizator -> Baza : upiši trku sa organizatorom iz sesije
+  Baza --> ViewsOrganizator : sačuvano
+  ViewsOrganizator --> Pregledac : preusmeri na sektore
+end
+
+Organizator -> Pregledac : dodaje/menja sektor
+Pregledac -> ViewsOrganizator : POST sektor
+ViewsOrganizator -> Baza : proveri vlasništvo trke
+alt tuđa trka
+  Baza --> ViewsOrganizator : nema zapisa
+  ViewsOrganizator --> Pregledac : 404
+else sopstvena trka
+  ViewsOrganizator -> SektorForm : validiraj cenu i kapacitet
+  alt novi kapacitet < već prodato
+    SektorForm --> ViewsOrganizator : greška
+    ViewsOrganizator --> Pregledac : ne menjaj sektor
+  else validno
+    SektorForm -> Baza : sačuvaj; očuvaj broj prodatih
+    Baza --> ViewsOrganizator : sektor
+    ViewsOrganizator --> Pregledac : ažurirana lista
+  end
+end
+
+Organizator -> Pregledac : briše sektor ili trku
+Pregledac -> ViewsOrganizator : POST brisanje + CSRF
+ViewsOrganizator -> Baza : postoje li rezervacije?
+alt postoje rezervacije
+  Baza --> ViewsOrganizator : da
+  ViewsOrganizator --> Pregledac : odbij brisanje
+else nema rezervacija
+  ViewsOrganizator -> Baza : DELETE
+  ViewsOrganizator --> Pregledac : potvrda
+end
+@enduml

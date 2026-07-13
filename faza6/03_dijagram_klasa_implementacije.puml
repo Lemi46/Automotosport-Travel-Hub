@@ -1,0 +1,115 @@
+' Autor:  Marko Mandić 0625/2023;
+@startuml
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "HTTP/MVC sloj" {
+  class ViewsAuth {
+    +prijava_registracija(request)
+    +odjava(request)
+  }
+  class ViewsKupac {
+    +pretraga_trka(request)
+    +ajax_filtriraj_trke(request)
+    +dodaj_u_korpu(request, id)
+    +potvrdi_placanje(request, id)
+    +preuzmi_vaucer(request, id)
+  }
+  class ViewsOrganizator {
+    +organizator_dashboard(request)
+    +dodaj_trku(request)
+    +upravljaj_sektorima(request, id)
+  }
+  class ViewsHotelijer {
+    +partner_dashboard(request)
+    +izmeni_smestaj(request, id)
+  }
+  class ViewsAdmin {
+    +admin_dashboard(request)
+    +api_statistika(request)
+    +sinhronizuj_trke(request)
+  }
+}
+
+package "Validacija" {
+  class LoginForm
+  class RegistrationForm
+  class TrkaForm
+  class SektorForm
+  class SmestajForm
+  class PackageForm
+  class RecenzijaForm
+}
+
+package "Poslovne usluge" {
+  class ReservationService {
+    +create_cart_reservation(...)
+    +finalize_reservation(...)
+    +cancel_reservation(...)
+    +mark_past_reservations_complete(...)
+  }
+  class AccountService {
+    +suspend_user(...)
+    +activate_user(...)
+  }
+  class MotorsportSyncService {
+    +sync_all_motorsports(...): dict
+    +sync_f1_races(...): SyncResult
+    +sync_motogp_races(...): SyncResult
+    +sync_wsbk_races(...): SyncResult
+  }
+  class PdfUtils {
+    +build_voucher_pdf(vaucer): bytes
+  }
+  class SessionAuth {
+    +get_session_user(request)
+    +role_required(...)
+  }
+}
+
+package "ORM model" {
+  class Korisnik
+  class Trka
+  class Sektor
+  class Smestaj
+  class Rezervacija
+  class DigitalniVaucer
+  class Recenzija
+}
+
+package "Klijentski sloj" {
+  class DjangoTemplates
+  class SearchJS
+  class AdminJS
+  class RaceNameJS
+}
+
+class "F1 / MotoGP / WSBK API izvori" as MotorsportAPI <<external>>
+
+ViewsAuth ..> LoginForm
+ViewsAuth ..> RegistrationForm
+ViewsAuth ..> SessionAuth
+ViewsKupac ..> PackageForm
+ViewsKupac ..> RecenzijaForm
+ViewsKupac ..> ReservationService
+ViewsKupac ..> PdfUtils
+ViewsOrganizator ..> TrkaForm
+ViewsOrganizator ..> SektorForm
+ViewsHotelijer ..> SmestajForm
+ViewsAdmin ..> AccountService
+ViewsAdmin ..> MotorsportSyncService
+MotorsportSyncService ..> MotorsportAPI
+ReservationService ..> Rezervacija
+ReservationService ..> Sektor
+ReservationService ..> Smestaj
+ReservationService ..> DigitalniVaucer
+AccountService ..> Korisnik
+ViewsAuth ..> Korisnik
+ViewsKupac ..> DjangoTemplates
+ViewsOrganizator ..> DjangoTemplates
+ViewsHotelijer ..> DjangoTemplates
+ViewsAdmin ..> DjangoTemplates
+DjangoTemplates ..> SearchJS
+DjangoTemplates ..> AdminJS
+DjangoTemplates ..> RaceNameJS
+@enduml
