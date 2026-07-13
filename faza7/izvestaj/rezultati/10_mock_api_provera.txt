@@ -1,0 +1,7 @@
+/health 200 application/json; charset=utf-8 16
+/f1/current.json 200 application/json; charset=utf-8 188
+/motogp/seasons 200 application/json; charset=utf-8 60
+/motogp/events?seasonUuid=ui-current-season&isFinished=false 200 application/json; charset=utf-8 228
+/motogp/events?seasonUuid=ui-current-season&isFinished=true 200 application/json; charset=utf-8 228
+/wsbk/eventsseason.php?id=4454&s=2026 200 application/json; charset=utf-8 139
+Mock API: OK

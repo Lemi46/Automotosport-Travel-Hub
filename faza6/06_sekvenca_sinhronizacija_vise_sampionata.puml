@@ -1,0 +1,66 @@
+' Autor: Milan Lemić 0323/2023; 
+@startuml
+actor Administrator
+boundary Pregledac
+control ViewsAdmin
+control sync_all_motorsports as Batch
+participant "F1 servis" as F1
+participant "MotoGP servis" as MotoGP
+participant "WSBK servis" as WSBK
+control _store_races as Store
+database MySQL
+
+Administrator -> Pregledac : pokreće sinhronizaciju
+Pregledac -> ViewsAdmin : POST /admin-panel/sinhronizuj/ + CSRF
+alt nije administrator ili zahtev nije POST
+  ViewsAdmin --> Pregledac : 405 / preusmerenje sa porukom
+else dozvoljeno
+  ViewsAdmin -> Batch : sync_all_motorsports()
+  loop F1, MotoGP i WSBK obrađuju se nezavisno
+    alt F1
+      Batch -> F1 : GET current.json (timeout)
+      alt mrežna/HTTP/JSON/format greška
+        F1 --> Batch : ExternalSyncError za F1
+      else validan kalendar
+        F1 --> Batch : RaceData[]
+        Batch -> Store : _store_races("F1", trke)
+      end
+    else MotoGP
+      Batch -> MotoGP : GET seasons
+      Batch -> MotoGP : GET events isFinished=false/true
+      alt servis nedostupan ili nema tekuće sezone
+        MotoGP --> Batch : ExternalSyncError za MotoGP
+      else validni odgovori
+        MotoGP --> Batch : događaji bez duplikata i testova
+        Batch -> Store : _store_races("MotoGP", trke)
+      end
+    else WSBK
+      Batch -> WSBK : GET eventsseason(id lige, godina)
+      alt mrežna/HTTP/JSON/format greška
+        WSBK --> Batch : ExternalSyncError za WSBK
+      else validan odgovor
+        WSBK --> Batch : validni događaji; loši datumi preskočeni
+        Batch -> Store : _store_races("WSBK", trke)
+      end
+    end
+    alt Store je pozvan
+      Store -> MySQL : BEGIN; sistemski organizator
+      loop svaka normalizovana trka
+        Store -> MySQL : SELECT FOR UPDATE po nazivu, datumu i šampionatu
+        alt trka ne postoji
+          Store -> MySQL : INSERT
+        else sistemska trka ima novu stazu/državu
+          Store -> MySQL : UPDATE samo staza i država
+        else ista ili je preuzeo pravi organizator
+          Store -> Store : skipped++ bez prepisivanja
+        end
+      end
+      Store --> Batch : SyncResult(created, updated, skipped)
+    else greška izvora
+      Batch -> Batch : zapamti grešku i nastavi sledeći izvor
+    end
+  end
+  Batch --> ViewsAdmin : rezultati F1, MotoGP i WSBK
+  ViewsAdmin --> Pregledac : posebna poruka za svaki šampionat
+end
+@enduml

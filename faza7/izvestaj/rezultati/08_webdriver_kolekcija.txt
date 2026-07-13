@@ -1,0 +1,8 @@
+test_marko.py::test_wd_k01_kupovina_paketa_i_pdf_vaucer
+test_marko.py::test_wd_k02_admin_sinhronizuje_tri_izvora_i_upravlja_nalogom
+test_milan.py::test_wd_m01_ajax_pretraga_i_prazan_rezultat
+test_milan.py::test_wd_m02_hotelijer_dodaje_i_menja_smestaj
+test_milica.py::test_wd_l01_registracija_i_prijava_novog_kupca
+test_milica.py::test_wd_l02_organizator_kreira_trku_i_sektor
+
+6 tests collected in 0.04s

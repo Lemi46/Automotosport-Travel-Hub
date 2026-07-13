@@ -1,0 +1,98 @@
+' Autor: Milan Lemić 0323/2023; 
+
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #F7FAFC
+  BorderColor #123258
+  ArrowColor #44505E
+}
+actor Gost
+actor Kupac
+actor Organizator
+actor Hotelijer
+actor Administrator
+actor "F1 / MotoGP / WSBK API" as API
+
+Kupac --|> Gost
+Organizator --|> Gost
+Hotelijer --|> Gost
+Administrator --|> Gost
+
+rectangle "Automotosport Travel Hub" {
+  usecase "Registracija" as UC_REG
+  usecase "Prijava" as UC_LOGIN
+  usecase "Odjava" as UC_LOGOUT
+  usecase "Pretraga i filtriranje trka" as UC_SEARCH
+  usecase "Pregled detalja trke" as UC_DETAILS
+  usecase "AJAX osvežavanje rezultata" as UC_AJAX_SEARCH
+
+  usecase "Kreiranje paketa\n(sektor + smeštaj)" as UC_PACKAGE
+  usecase "Upravljanje korpom" as UC_CART
+  usecase "Plaćanje rezervacije" as UC_PAY
+  usecase "Provera raspoloživosti" as UC_AVAIL
+  usecase "Izdavanje digitalnog vaučera" as UC_VOUCHER
+  usecase "Preuzimanje PDF vaučera" as UC_PDF
+  usecase "Pregled istorije kupovina" as UC_HISTORY
+  usecase "Otkazivanje rezervacije" as UC_CANCEL
+  usecase "Ostavljanje recenzije" as UC_REVIEW
+
+  usecase "Upravljanje sopstvenim trkama" as UC_RACE
+  usecase "AJAX provera naziva trke" as UC_RACE_NAME
+  usecase "Upravljanje sektorima" as UC_SECTOR
+  usecase "Preuzimanje uvezene trke" as UC_CLAIM
+
+  usecase "Upravljanje sopstvenim smeštajima" as UC_ACCOM
+
+  usecase "Suspendovanje/aktivacija naloga" as UC_SUSPEND
+  usecase "Pregled statistike prodaje" as UC_STATS
+  usecase "AJAX promena perioda statistike" as UC_STATS_AJAX
+  usecase "Sinhronizacija F1, MotoGP i WSBK kalendara" as UC_SYNC
+}
+
+Gost --> UC_REG
+Gost --> UC_LOGIN
+Gost --> UC_SEARCH
+Gost --> UC_DETAILS
+UC_SEARCH .> UC_AJAX_SEARCH : <<include>>
+
+Kupac --> UC_LOGOUT
+Kupac --> UC_PACKAGE
+Kupac --> UC_CART
+Kupac --> UC_PAY
+Kupac --> UC_PDF
+Kupac --> UC_HISTORY
+Kupac --> UC_CANCEL
+Kupac --> UC_REVIEW
+UC_PACKAGE .> UC_CART : <<include>>
+UC_PAY .> UC_AVAIL : <<include>>
+UC_PAY .> UC_VOUCHER : <<include>>
+UC_HISTORY .> UC_PDF : <<extend>>
+UC_HISTORY .> UC_CANCEL : <<extend>>
+UC_HISTORY .> UC_REVIEW : <<extend>>
+
+Organizator --> UC_LOGOUT
+Organizator --> UC_RACE
+Organizator --> UC_SECTOR
+Organizator --> UC_CLAIM
+UC_RACE .> UC_RACE_NAME : <<include>>
+
+Hotelijer --> UC_LOGOUT
+Hotelijer --> UC_ACCOM
+
+Administrator --> UC_LOGOUT
+Administrator --> UC_SUSPEND
+Administrator --> UC_STATS
+Administrator --> UC_SYNC
+UC_STATS .> UC_STATS_AJAX : <<include>>
+API --> UC_SYNC
+
+note bottom of UC_ACCOM
+Baza čuva agregirani smeštaj,
+broj slobodnih soba i jednu cenu/noć.
+end note
+note bottom of UC_SYNC
+Uvoz koristi samo postojeća polja tabele trka.
+end note
+@enduml

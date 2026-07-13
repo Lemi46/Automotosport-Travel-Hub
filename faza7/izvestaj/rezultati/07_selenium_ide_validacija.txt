@@ -1,0 +1,11 @@
+JSON: validan
+Selenium IDE verzija: 2.0
+Broj testova: 6
+Broj komandi: 58
+Suite referencira svih 6 testova: DA
+- IDE-M01 AJAX pretraga i prazan rezultat [Milan Lemić 0323/2023] (8 komandi)
+- IDE-M02 Hotelijer vidi samo polja postojeće baze [Milan Lemić 0323/2023] (12 komandi)
+- IDE-L01 Registracija odbija nepodudarne lozinke [Milica Štavljanin 0391/2023] (10 komandi)
+- IDE-L02 Organizator ne može sačuvati praznu trku [Milica Štavljanin 0391/2023] (11 komandi)
+- IDE-K01 Suspendovani korisnik ne može da se prijavi [Marko Mandić 0625/2023] (7 komandi)
+- IDE-K02 Kupac je preusmeren sa administratorske rute [Marko Mandić 0625/2023] (10 komandi)

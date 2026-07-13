@@ -1,0 +1,9 @@
+ssssss                                                                   [100%]
+=========================== short test summary info ============================
+SKIPPED [1] test_marko.py:13: Chrome/Chromium ili kompatibilan ChromeDriver nije dostupan: Unable to obtain driver for chrome; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/driver_location
+SKIPPED [1] test_marko.py:47: Chrome/Chromium ili kompatibilan ChromeDriver nije dostupan: Unable to obtain driver for chrome; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/driver_location
+SKIPPED [1] test_milan.py:14: Chrome/Chromium ili kompatibilan ChromeDriver nije dostupan: Unable to obtain driver for chrome; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/driver_location
+SKIPPED [1] test_milan.py:43: Chrome/Chromium ili kompatibilan ChromeDriver nije dostupan: Unable to obtain driver for chrome; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/driver_location
+SKIPPED [1] test_milica.py:14: Chrome/Chromium ili kompatibilan ChromeDriver nije dostupan: Unable to obtain driver for chrome; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/driver_location
+SKIPPED [1] test_milica.py:53: Chrome/Chromium ili kompatibilan ChromeDriver nije dostupan: Unable to obtain driver for chrome; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors/driver_location
+6 skipped in 31.87s
