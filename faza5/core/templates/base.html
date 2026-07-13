@@ -1,0 +1,75 @@
+{# Autori: Milan Lemić 0323/2023; Milica Štavljanin 0391/2023; Marko Mandić 0625/2023; #}
+{% load static %}
+<!doctype html>
+<html lang="sr-Latn">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Paketi ulaznica i smeštaja za auto-moto trke.">
+    <title>{% block title %}Automotosport Travel Hub{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'core/css/site.css' %}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+<a class="skip-link" href="#glavni-sadrzaj">Pređi na sadržaj</a>
+<header class="site-header">
+    <div class="container nav-shell">
+        <a class="brand" href="{% url 'index' %}" aria-label="Automotosport Travel Hub - početna">
+            <img src="{% static 'core/img/logo.jpeg' %}" alt="" width="46" height="46">
+            <span><strong>Automotosport</strong><small>Travel Hub</small></span>
+        </a>
+        <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="main-nav" data-nav-toggle>☰</button>
+        <nav id="main-nav" class="main-nav" aria-label="Glavna navigacija" data-nav>
+            <a href="{% url 'pretraga_trka' %}">Pretraga trka</a>
+            {% if session_user %}
+                {% if session_user.uloga == 'Kupac' %}
+                    <a href="{% url 'korpa' %}">Korpa</a>
+                    <a href="{% url 'istorija_kupovina' %}">Moje kupovine</a>
+                {% elif session_user.uloga == 'Organizator' %}
+                    <a href="{% url 'organizator_dashboard' %}">Panel organizatora</a>
+                {% elif session_user.uloga == 'Hotelijer' %}
+                    <a href="{% url 'partner_dashboard' %}">Panel hotelijera</a>
+                {% elif session_user.uloga == 'Administrator' %}
+                    <a href="{% url 'admin_dashboard' %}">Administracija</a>
+                {% endif %}
+                <span class="user-chip" title="{{ session_user.email }}">{{ session_user.ime }} · {{ session_user.uloga }}</span>
+                <form method="post" action="{% url 'odjava' %}" class="inline-form">
+                    {% csrf_token %}
+                    <button type="submit" class="button button-ghost" data-testid="logout-button">Odjava</button>
+                </form>
+            {% else %}
+                <a class="button button-primary" href="{% url 'auth' %}" data-testid="auth-link">Prijava</a>
+            {% endif %}
+        </nav>
+    </div>
+</header>
+
+{% if messages %}
+<div class="container message-stack" aria-live="polite">
+    {% for message in messages %}
+        <div class="message message-{{ message.tags|default:'info' }}" role="status">
+            <span>{{ message }}</span>
+            <button type="button" aria-label="Zatvori poruku" data-dismiss-message>×</button>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<main id="glavni-sadrzaj">
+    {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+    <div class="container footer-grid">
+        <div>
+            <strong>Automotosport Travel Hub</strong>
+        </div>
+        <div class="footer-meta">
+            <span>ETF Beograd · PSI</span>
+        </div>
+    </div>
+</footer>
+<script src="{% static 'core/js/site.js' %}" defer></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

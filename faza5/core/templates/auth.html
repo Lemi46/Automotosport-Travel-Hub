@@ -1,0 +1,39 @@
+{# Autori: Milan Lemić 0323/2023; Milica Štavljanin 0391/2023; Marko Mandić 0625/2023; #}
+{% extends 'base.html' %}
+{% block title %}Prijava i registracija · Automotosport Travel Hub{% endblock %}
+{% block content %}
+<section class="auth-section">
+    <div class="container auth-grid">
+        <article class="auth-intro">
+            <span class="eyebrow">Jedan nalog, jasna uloga</span>
+            <h1>Pristupite svom panelu.</h1>
+            <p>Kupac rezerviše paket, organizator upravlja trkama i sektorima, a hotelijer agregiranim smeštajem iz baze.</p>
+            <ul class="check-list">
+                <li>Sigurno hashovanje lozinki</li>
+                <li>Zaštita od ponovljenih neuspešnih prijava</li>
+                <li>Sesija sa proverom uloge i statusa naloga</li>
+            </ul>
+        </article>
+        <div class="auth-forms">
+            <section class="form-card" id="prijava">
+                <h2>Prijava</h2>
+                <form method="post" action="{% url 'auth' %}">{% csrf_token %}
+                    <input type="hidden" name="akcija" value="prijava">
+                    <input type="hidden" name="next" value="{{ next_path }}">
+                    {% include 'components/_form_fields.html' with form=login_form %}
+                    <button class="button button-primary button-block" type="submit" data-testid="login-submit">
+                        Prijavi se</button>
+                </form>
+            </section>
+            <section class="form-card">
+                <h2>Registracija</h2>
+                <p class="small-note">Administratorski nalog se ne kreira javnom registracijom.</p>
+                <form method="post" action="{% url 'auth' %}">{% csrf_token %}
+                    <input type="hidden" name="akcija" value="registracija">
+                    {% include 'components/_form_fields.html' with form=registration_form %}
+                    <button class="button button-secondary button-block" type="submit" data-testid="registration-submit">Kreiraj nalog</button>
+                </form>
+            </section>
+        </div>
+    </div>
+</section>{% endblock %}
