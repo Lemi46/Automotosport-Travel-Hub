@@ -1,16 +1,9 @@
-"""
-ASGI config for automotosport_hub project.
-
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/6.0/howto/deployment/asgi/
-"""
+# Autori: Milan Lemić 0323/2023; Milica Štavljanin 0391/2023; Marko Mandić 0625/2023;
+"""ASGI konfiguracija projekta."""
 
 import os
 
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'automotosport_hub.settings')
-
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "automotosport_hub.settings")
 application = get_asgi_application()
