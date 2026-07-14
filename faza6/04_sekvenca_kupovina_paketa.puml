@@ -1,0 +1,55 @@
+' Autor:  Milica Štavljanin 0391/2023;
+
+@startuml
+actor Kupac
+boundary Pregledac
+control ViewsKupac
+control PackageForm
+control ReservationService
+database Baza
+control PdfUtils
+
+Kupac -> Pregledac : otvara detalje trke
+Pregledac -> ViewsKupac : GET /trka/{id}/
+ViewsKupac -> Baza : učitaj trku, sektore, smeštaje
+Baza --> ViewsKupac : podaci
+ViewsKupac --> Pregledac : HTML forma paketa
+Kupac -> Pregledac : bira sektor i smeštaj
+Pregledac -> ViewsKupac : POST dodaj-u-korpu
+ViewsKupac -> PackageForm : validiraj isti događaj i dostupnost
+alt nevalidan izbor
+  PackageForm --> ViewsKupac : greške
+  ViewsKupac --> Pregledac : poruka, bez upisa
+else validan izbor
+  ViewsKupac -> ReservationService : create_cart_reservation()
+  ReservationService -> Baza : upiši status U_korpi
+  Baza --> ReservationService : rezervacija
+  ViewsKupac --> Pregledac : preusmeri u korpu
+end
+Kupac -> Pregledac : potvrđuje plaćanje
+Pregledac -> ViewsKupac : POST potvrdi
+alt demonstracioni neuspeh naplate
+  ViewsKupac --> Pregledac : greška; korpa i kapacitet ostaju
+else pokušaj uspeha
+  ViewsKupac -> ReservationService : finalize_reservation()
+  ReservationService -> Baza : BEGIN; zaključaj rezervaciju,
+  ReservationService -> Baza : sektor i smeštaj (SELECT FOR UPDATE)
+  alt nema mesta/soba ili trka završena
+    Baza --> ReservationService : nedostupno
+    ReservationService -> Baza : ROLLBACK
+    ReservationService --> ViewsKupac : AvailabilityError
+    ViewsKupac --> Pregledac : poruka; ništa nije naplaćeno
+  else dostupno
+    ReservationService -> Baza : umanji mesto i sobu,
+    ReservationService -> Baza : status Aktivna + digitalni vaučer
+    ReservationService -> Baza : COMMIT
+    ReservationService --> ViewsKupac : vaučer
+    ViewsKupac --> Pregledac : potvrda kupovine
+    Kupac -> Pregledac : preuzima vaučer
+    Pregledac -> ViewsKupac : GET /vaucer/{id}/pdf
+    ViewsKupac -> PdfUtils : build_voucher_pdf()
+    PdfUtils --> ViewsKupac : PDF + QR
+    ViewsKupac --> Pregledac : application/pdf
+  end
+end
+@enduml

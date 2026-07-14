@@ -1,0 +1,82 @@
+' Autor: Milica Štavljanin 0391/2023;
+
+@startuml
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor #FFFFFF
+  BorderColor #123258
+  ArrowColor #44505E
+}
+
+class Korisnik {
+  +id_korisnika: int <<PK>>
+  +ime: varchar(50)
+  +prezime: varchar(50)
+  +email: varchar(100) <<UQ>>
+  +lozinka: varchar(255)
+  +uloga: enum
+  +status_naloga: enum
+  +puno_ime: str
+}
+class Trka {
+  +id_trke: int <<PK>>
+  +naziv_trke: varchar(100)
+  +staza: varchar(100)
+  +drzava: varchar(50)
+  +datum_odrzavanja: date
+  +sampionat: enum
+}
+class Sektor {
+  +id_sektora: int <<PK>>
+  +naziv_sektora: varchar(50)
+  +ukupni_kapacitet: int
+  +slobodna_mesta: int
+  +cena_karte: decimal(10,2)
+  +broj_prodatih: int
+}
+class Smestaj {
+  +id_smestaja: int <<PK>>
+  +naziv_smestaja: varchar(100)
+  +lokacija: varchar(255)
+  +udaljenost_od_staze: decimal(5,2)
+  +broj_slobodnih_soba: int
+  +cena_po_nocenju: decimal(10,2)
+}
+class Rezervacija {
+  +id_rezervacije: int <<PK>>
+  +datum_kreiranja: datetime
+  +ukupna_cena: decimal(10,2)
+  +status_rezervacije: enum
+  +trka: Trka
+}
+class DigitalniVaucer {
+  +id_vaucera: int <<PK>>
+  +qr_kod: varchar(255) <<UQ>>
+  +status_vaucera: enum
+}
+class Recenzija {
+  +id_recenzije: int <<PK>>
+  +ocena_smestaja: int
+  +komentar_smestaja: text?
+  +ocena_organizatora: int
+  +komentar_organizatora: text?
+  +datum_objave: timestamp
+}
+
+Korisnik "1 organizator" -- "0..*" Trka : organizuje >
+Trka "1" *-- "0..*" Sektor : sadrži >
+Korisnik "1 hotelijer" -- "0..*" Smestaj : nudi >
+Trka "1" *-- "0..*" Smestaj : povezan sa >
+Korisnik "1 kupac" -- "0..*" Rezervacija : kreira >
+Sektor "1" -- "0..*" Rezervacija : izabran u >
+Smestaj "1" -- "0..*" Rezervacija : izabran u >
+Rezervacija "1" *-- "0..1" DigitalniVaucer : izdaje >
+Rezervacija "1" *-- "0..1" Recenzija : ocenjuje >
+Korisnik "1 kupac" -- "0..*" Recenzija : objavljuje >
+
+note right of Rezervacija
+Jedan zapis predstavlja
+1 kartu + 1 noćenje,
+jer baza nema količinu ni broj noći.
+end note
+@enduml
